@@ -12,7 +12,7 @@ npm install qreal --save
 or you can use  [yarn](https://yarnpkg.com/) to install qreal.
 
 ```bash
-npm install qreal --save
+yarn add qreal
 ```
 and you can add it by ```<script/>``` tag
 
@@ -85,7 +85,7 @@ qreal(OBJECTS, {
 ```
 
 ### $length
-TYPE : number
+TYPE : Number
 
 You can specify the number of items what do you want
 
@@ -129,7 +129,51 @@ qreal(OBJECTS, {
 ```
 
 
-Please make sure to update the tests as appropriate.
+### $include
+TYPE : Function
+
+ARGS : [ object ]
+
+You can include items if you want
+
+```javascript
+qreal(OBJECTS, {
+ $length : 2,
+ $ignore : [ 'address', 'age' ],
+ $include : (obj) => { adult: obj.age > 18 }
+})
+
+// Result
+[
+ {
+  name : 'ahmed',
+  adult: true
+ },
+ {
+  name : 'mona',
+  adult: true
+ }
+]
+```
+### $return
+TYPE : Number
+
+You can make qreal return one item by write index of it
+
+```javascript
+qreal(OBJECTS, {
+ $length : 2,
+ $ignore : [ 'address', 'age' ],
+ $include : (obj) => { adult: obj.age > 18 },
+ $return : 1
+})
+
+// Result
+{
+ name : 'mona',
+ adult: true
+}
+```
 
 ## License
 [MIT](https://github.com/AbrahemAlhofe/qrealjs/blob/master/LICENSE)

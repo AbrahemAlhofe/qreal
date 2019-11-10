@@ -7,6 +7,8 @@ function qreal(_objs, q) {
     $ignore : [],
     $include : () => {},
     $return : 0,
+    // $keyName
+    // $value
     $normalFeild : false
   }, q)
   var res = _.reduce(objs, (result, obj, key) => {
