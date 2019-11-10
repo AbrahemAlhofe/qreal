@@ -2,9 +2,15 @@
   "name": "qreal",
   "version": "1.0.0",
   "description": "a small middleware to restructure data",
-  "main": "index.js",
+  "main": "qreal.js",
+  "scripts": {
+    "build": "rollup src/index.js --file qreal.js --format umd"
+  },
   "repository": "https://github.com/AbrahemAlhofe/qreal.js.git",
   "author": "abrahem ali alhofe <alhofeabrahem88@gmail.com>",
   "license": "MIT",
-  "private": false
+  "private": false,
+  "dependencies": {
+    "lodash": "^4.17.15"
+  }
 }
