@@ -84,11 +84,14 @@ qreal(OBJECTS, {
 ]
 ```
 
+### $length
+TYPE : number
+
 You can specify the number of items what do you want
 
 ```javascript
 qreal(OBJECTS, {
- length : 2,
+ $length : 2,
  name : ''
 })
 
@@ -103,11 +106,30 @@ qreal(OBJECTS, {
 ]
 ```
 
+### $ignore
+TYPE : Array
 
-## Contributing
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+You can select the items you don't want
+
+```javascript
+qreal(OBJECTS, {
+ $length : 2,
+ $ignore : [ 'address', 'age' ]
+})
+
+// Result
+[
+ {
+  name : 'ahmed',
+ },
+ {
+  name : 'mona',
+ }
+]
+```
+
 
 Please make sure to update the tests as appropriate.
 
 ## License
-[MIT](https://choosealicense.com/licenses/mit/)
+[MIT](https://github.com/AbrahemAlhofe/qrealjs/blob/master/LICENSE)
