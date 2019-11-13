@@ -6,7 +6,8 @@
   "scripts": {
     "build": "rollup src/index.js --file qreal.js --format umd"
   },
-  "repository": "https://github.com/AbrahemAlhofe/qreal.js.git",
+  "repository": "https://github.com/AbrahemAlhofe/qrealjs.git",
+  "bugs": "https://github.com/AbrahemAlhofe/qrealjs/issues",
   "author": "abrahem ali alhofe <alhofeabrahem88@gmail.com>",
   "license": "MIT",
   "private": false,
