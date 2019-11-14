@@ -58,7 +58,7 @@ var OBJECTS = [
   address : {
    first : 'brazil',
    second : 'brazil'
-  }
+  },
   age : 27
  }
 ]
@@ -242,6 +242,62 @@ qreal(OBJECTS, {
  'mona' : 54
 }
 ```
+## Tips 😎 & Tricks ✨
+
+### Tip 1 😎 :
+
+You can do deep selecting in ```$keyName``` and ```$value``` methods
+```javascript
+qreal(OBJECTS, {
+    name : '',
+    address : '',
+    $normalFeild : true,
+    $keyName : () => '@name.0', // 😜 WOW !
+    $value : '@address.first'
+})
+
+// Result
+{
+ a: "helwan",
+ m: "giza",
+ s: "newyork",
+ z: "brazil",
+}
+```
+
+### Tip 2 😎 :
+
+You can make deep restructure data
+```javascript
+qreal(OBJECTS, {
+    address: {
+        first : ''
+    }
+})
+
+// Result
+{
+ address : {
+  first : 'helwan',
+ }
+},
+{
+ address : {
+  first : 'giza',
+ }
+},
+{
+ address : {
+  first : 'newyork',
+ }
+},
+{
+ address : {
+  first : 'brazil',
+ }
+}
+```
+
 
 ## License
 [MIT](https://github.com/AbrahemAlhofe/qrealjs/blob/master/LICENSE)
