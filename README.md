@@ -1,4 +1,4 @@
-# qreal v1.0.0
+# Qreal: control your data 😎
 
 qreal is small middleware to restructure data ( Array Objects )
 

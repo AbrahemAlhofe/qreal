@@ -1,6 +1,6 @@
 {
   "name": "qreal",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "a small middleware to restructure data",
   "main": "qreal.js",
   "scripts": {
@@ -10,12 +10,12 @@
   "bugs": "https://github.com/AbrahemAlhofe/qrealjs/issues",
   "author": "abrahem ali alhofe <alhofeabrahem88@gmail.com>",
   "license": "MIT",
-  "keywords" : {
+  "keywords" : [
     "qreal",
     "restructure",
     "data",
     "middleware"
-  },
+  ],
   "private": false,
   "dependencies": {
     "lodash": "^4.17.15"
