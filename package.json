@@ -4,13 +4,14 @@
   "description": "a small middleware to restructure data",
   "main": "qreal.js",
   "scripts": {
-    "build": "rollup src/index.js --file qreal.js --format umd"
+    "build": "rollup src/index.js --file qreal.js --format umd",
+    "test": "jest"
   },
   "repository": "https://github.com/AbrahemAlhofe/qrealjs.git",
   "bugs": "https://github.com/AbrahemAlhofe/qrealjs/issues",
   "author": "abrahem ali alhofe <alhofeabrahem88@gmail.com>",
   "license": "MIT",
-  "keywords" : [
+  "keywords": [
     "qreal",
     "restructure",
     "data",
@@ -19,5 +20,8 @@
   "private": false,
   "dependencies": {
     "lodash": "^4.17.15"
+  },
+  "devDependencies": {
+    "jest": "^25.1.0"
   }
 }
