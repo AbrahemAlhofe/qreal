@@ -12,7 +12,6 @@ const $fillStart = (arr, chr=' ', length) => {
   return [ ...placeholder, ...arr ]
 }
 
-
 const $fillEnd = (arr, chr=' ', length) => _.reverse( $fillStart(arr, chr, length) )
 
 const $castFunction = (data) => _.isFunction(data) ? data:() => data
@@ -73,7 +72,7 @@ const $take = ( data, argument ) => {
 }
 
 
-function qreal(data, structre) {
+function qreal ( data, structre ) {
   // cast data if it does not array
   data = _.castArray(data)
 
@@ -85,6 +84,7 @@ function qreal(data, structre) {
     $keyName : '@',
     $value : '@'
   }, structre)
+
 
   // resize data before restructure it
   data = $take( data, methods.$take )
@@ -137,17 +137,31 @@ function qreal(data, structre) {
       methods.$value = _.mapValues( queries, ( query, key ) => {
         // get value of data from object
         let context = methods.$value[ key ]
+        let hadMiddlewares = qreal.middlewares[key]
+
+        // if query key had an middlewares run it
+        if ( hadMiddlewares ) {
+          context = qreal.middlewares[key].pass( context )
+        }
 
         // WARN : if query is worng
-        if ( _.isUndefined(context) ) { $warn(`[ ${key} ] item is undefined`) }
+        if ( _.isUndefined(context) ) {
+          if ( !_.isArray( methods.$value ) ) { $warn(`[ ${key} ] is undefined`) }
+        }
 
         // deep restructure data
         if ( _.isObject(query) ) {
           /*
-          restructure query object,
-          and wrap it to make qreal not make deep restructure again
+            restructure query object,
+            and wrap it to make qreal not make deep restructure again
           */
-          let subObject = qreal( [ context ], query )[0]
+          let subObject = qreal([ context ], query )[0]
+          
+          if ( hadMiddlewares ) {
+            subObject = qreal(context, query )
+            if ( _.isObject(context) && !_.isArray(context) ) { subObject = subObject[0] }
+          }
+
           context = ( _.isArray( context ) ) ? _.toArray( subObject ) : subObject
         }
 
@@ -156,11 +170,41 @@ function qreal(data, structre) {
       })
     }
 
-
     // push restructured item to result
     result[ methods.$keyName ] = methods.$value
 
     return result
   }, ( methods.$keyName !== '@' ) ? {}:[] )
+
 }
+
+// middlewares of data
+qreal.middlewares = {}
+
+// add a middleware to data
+qreal.use = function ( key, middleware ) {
+  var array = [ middleware ]
+
+  array.middlewares = qreal.middlewares[key]
+
+  // pass data to all middlewares of data as a waterflow
+  array.pass = function (data) {
+    for ( let middleware of this ) {
+      const val = middleware( data )
+      if ( typeof val !== 'object' ) { $warn(`middleware of ${ key } should return Object`); break }
+      data = val
+    }
+    return data
+  };
+
+  // if data had an space in middlwares push new middleware to it
+  if ( qreal.middlewares[key] ) {
+    qreal.middlewares[key].push(middleware)
+  } else {
+    // create space in middleware for data
+    qreal.middlewares[key] = array
+  }
+
+}
+
 module.exports = qreal

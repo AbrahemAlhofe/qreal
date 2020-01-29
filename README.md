@@ -1,6 +1,6 @@
 # Qreal: control your data 😎
 
-qreal is small middleware to restructure data ( Array Objects )
+qreal is small function to restructure data ( Array Objects )
 
 ## Installation
 
@@ -10,7 +10,7 @@ Use the [npm](https://www.npmjs.com) to install qreal.
 npm install qreal --save
 ```
 
-or you can use  [yarn](https://yarnpkg.com/) to install qreal.
+or you can use [yarn](https://yarnpkg.com/) to install it
 
 ```bash
 yarn add qreal
@@ -24,141 +24,143 @@ you can use qreal in browser by add url of [unpkg](https://unpkg.com) in ```<scr
 
 ## Usage
 
-you can restructure data by write the name of the property.
+restructure data by write the name of the property.
 
 ```javascript
 const qreal = require('qreal')
-var OBJECTS = [
- {
-  name : 'ahmed',
-  age : 23,
-  address : {
-   first : 'helwan',
-   second : 'cairo'
-  }
- },
- {
-  name : 'mona',
-  age : 54,
-  address : {
-   first : 'giza',
-   second : 'egypt'
-  }
- },
- {
-  name : 'said',
-  age : 30,
-  address : {
-   first : 'newyork',
-   second : 'usa'
-  }
- },
- {
-  name : 'zaki',
-  address : {
-   first : 'brazil',
-   second : 'brazil'
-  },
-  age : 27
- }
+var data = [
+   {
+       name : 'jack',
+       age : 13,
+       address : {
+           first : 'london',
+           second : 'bridge'
+       },
+   },
+   {
+       name : 'john',
+       age : 23
+       address : {
+           first : 'berlin',
+           second : 'german'
+       }
+   }
 ]
 
-qreal(OBJECTS, {
- name : ''
+qreal(data, {
+ name : '',
+ // you can make an deep restructre to data
+ address : {
+   first : ''
+ }
 })
 
 // Result
 [
- {
-  name : 'ahmed',
- },
- {
-  name : 'mona',
- },
- {
-  name : 'said',
- },
- {
-  name : 'zaki',
- }
+     {
+         name : 'jack',
+         address : {
+             first : 'london',
+         },
+     },
+     {
+         name : 'john',
+         address : {
+             first : 'berlin',
+         }
+     }
 ]
 ```
 
 ### $take
 
-TYPE : Number
+TYPE :  $Number$  or  $Array$
 
 ------------------------------------
 
-You can specify the number of items what do you want
+$take provide you to specify count of items what do you want to take
 
 ```javascript
-qreal(OBJECTS, {
- $take: 2,
+qreal(data, {
+ $take: 1,
  name : ''
 })
 
 // Result
 [
  {
-  name : 'ahmed',
- },
- {
-  name : 'mona',
+  name : 'jack',
  }
 ]
 ```
 
-### $ignore
+##### examples :
 
-TYPE : Array
+```javascript
+{
+  // take first 3 items
+  $take : 3
+
+  // skip first 3 items
+  $take : -3
+
+  // take all items expect last 3 items
+  $take : [ -3 ]
+
+  // take item in index 3 in addition to 4 itmes after it
+  $take : [ 3, 4 ]
+
+  // take item had { name : "lorem" } in addition to 4 items after it 
+  $take : [ { name : "lorem" }, 4 ]
+}
+```
+
+## $ignore
+
+TYPE : $Array$
 
 -------------------------------
 
-You can select the items you don't want
+You can select items you don't want
 
 ```javascript
-qreal(OBJECTS, {
- $take : 2,
+qreal(data, {
  $ignore : [ 'address', 'age' ]
 })
 
 // Result
 [
  {
-  name : 'ahmed',
+  name : 'jack',
  },
  {
-  name : 'mona',
+  name : 'john',
  }
 ]
 ```
 
 ### $include
 
-TYPE : Function
-
-ARGS : [ object ]
+TYPE : $Function$
 
 -----------------------------
 
 You can include items if you want 😜.
 
 ```javascript
-qreal(OBJECTS, {
- $take : 2,
- $ignore : [ 'address', 'age' ],
- $include : (obj) => { adult: obj.age > 18 }
+qreal(data, { 
+     $include : (obj, key) => ({ adult : obj.age > 18 }),
+     name : '' 
 })
 
 // Result
 [
  {
-  name : 'ahmed',
-  adult: true
+  name : 'jack',
+  adult: false
  },
  {
-  name : 'mona',
+  name : 'john',
   adult: true
  }
 ]
@@ -166,131 +168,113 @@ qreal(OBJECTS, {
 
 ### $keyName
 
-TYPE: String | Function
+TYPE: $String$ or $Function$
 
-ARGS : [ object, key ]
+ARGS : [ Object , Key ]
 
 -----------------------
 
-You can set key of object 😎.
+$keyName provide you to change key name of object 😎.
 
-NOTE: the function of $keyName should return string
-
-NOTE: name must 🤬 start with '@' if you select name from object
+> name must 🤬 start with '@' if you select name from object
 
 ```javascript
 qreal(OBJECTS, {
- $length : 2,
- address : '',
- age : '',
- $keyName : '@name'
+     age : '',
+     $keyName : '@name',
+     // OR
+     $keyName : (obj, key) => '@name'
 })
 
 // Result
 {
- 'ahmed' : {
-     age : 23,
-     address : {
-         first : 'helwan',
-         second : 'cairo'
-     }
+ 'jack' : {
+    age : 13,
  },
- 'mona' : {
-    age : 54,
-    address : {
-        first : 'giza',
-        second : 'egypt'
-    }
+ 'john' : {
+    age : 23,
  },
 }
 ```
 
 ### $value
 
-TYPE: String | Function
+TYPE: $String$ or $Function$
 
-ARGS : [ object, key ]
+ARGS : [ Object , Key ]
 
 -----------------------
 
 You can set value of object 😎.
 
-NOTE: name must 🤬 start with '@' if you select value from object
+> name must 🤬 start with '@' if you select value from object
 
 ```javascript
 qreal(OBJECTS, {
- $length : 2,
- $ignore : [ 'address', 'age' ],
- $include : (obj) => { adult: obj.age > 18 },
- $keyName: '@name',
- $value: '@age',
+ $value: '@age'
 })
 
 // Result
 {
- 'ahmed' : 23,
- 'mona' : 54
+ 'jack' : 13,
+ 'john' : 23
 }
 ```
 
-## Tips 😎 & Tricks ✨
+## Qreal.use( name, middleware )
 
-### Tip 1 😎 :
+##### ARGS ( arguments what pass to middleware ) : [ ( value of data ) ]
 
-You can do deep selecting in ```$keyName``` and ```$value``` methods
-
-```javascript
-qreal(OBJECTS, {
-    name : '',
-    address : '',
-    $normalFeild : true,
-    $keyName : () => '@name.0', // 😜 WOW !
-    $value : '@address.first'
-})
-
-// Result
-{
- a: "helwan",
- m: "giza",
- s: "newyork",
- z: "brazil",
-}
-```
-
-### Tip 2 😎 :
-
-You can make deep restructure data
+Qreal.use method provide you to add middleware to data that can use for relationships between data
 
 ```javascript
-qreal(OBJECTS, {
-    address: {
-        first : ''
-    }
+const _ = require('lodash');
+const auhors = [
+    ...
+    {
+      name : 'George Orwell',
+      age : 46,
+      id : 3
+    },
+    ...
+]
+const books = [ 
+    ...
+    {
+       title : "Animal Farm",
+       description : "Is an allegoircal novella by George Orwell.",
+       author : 3 // this is an ID of author ( data what pass to middleware )
+    },
+    ...
+]
+
+qreal.use('author', ( id ) => {
+    return _.find( authors , { id } )
 })
 
-// Result
-{
- address : {
-  first : 'helwan',
- }
-},
-{
- address : {
-  first : 'giza',
- }
-},
-{
- address : {
-  first : 'newyork',
- }
-},
-{
- address : {
-  first : 'brazil',
- }
-}
+qreal(books, {
+   title : '',
+   author : {
+      $ignore : ['id'] 
+   }
+})
+
+// Result 
+[
+    ...
+    {
+        title : "Animal Farm",
+        author : {
+            name : "George Orwell",
+            age : 46
+        }
+    },
+    ...
+]
 ```
 
 ## License
+
+You can make deep restructure data
 
 [MIT](https://github.com/AbrahemAlhofe/qrealjs/blob/master/LICENSE)

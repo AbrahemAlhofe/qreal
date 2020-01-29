@@ -1,11 +1,11 @@
 {
   "name": "qreal",
-  "version": "1.0.3",
-  "description": "a small middleware to restructure data",
+  "version": "2.0.0",
+  "description": "a small package to restructure data",
   "main": "qreal.js",
   "scripts": {
-    "build": "rollup src/index.js --file qreal.js --format umd",
-    "test": "jest"
+    "build": "rollup --config",
+    "test": "jest src/qreal.test.js"
   },
   "repository": "https://github.com/AbrahemAlhofe/qrealjs.git",
   "bugs": "https://github.com/AbrahemAlhofe/qrealjs/issues",
@@ -15,13 +15,15 @@
     "qreal",
     "restructure",
     "data",
-    "middleware"
+    "package"
   ],
   "private": false,
   "dependencies": {
     "lodash": "^4.17.15"
   },
   "devDependencies": {
-    "jest": "^25.1.0"
+    "gulp": "^4.0.2",
+    "jest": "^25.1.0",
+    "rollup-plugin-uglify-es": "^0.0.1"
   }
 }
