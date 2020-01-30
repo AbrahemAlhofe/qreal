@@ -30,7 +30,9 @@ const $merge = (value, include, key) => {
 
     value = value + _.toString( include )
 
-  } else {
+  }
+
+  if ( _.isObject( value ) ) {
     value = _.merge( value, include )
   }
 
@@ -145,6 +147,7 @@ function qreal ( data, structure, callBack = () => {}) {
     // set $keyName and $value methods by default value and key name of object
     methods.$value = parse(structure.$value, value)
     methods.$keyName = parse(structure.$keyName, key)
+
 
     // Include
     // ================================================
