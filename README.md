@@ -273,8 +273,80 @@ qreal(books, {
 ]
 ```
 
+you can return promise in middleware,, if you make that you should put your left code into call back qreal
+
+```javascript
+const auhors = [
+     ...
+     {
+         name : 'George Orwell',
+         age : 46,
+         id : 3
+     },
+     ...
+]
+
+const find = ( id ) => {
+    return new Promise((resolve, reject) => {
+        authors.find({ id }, ( author ) => {
+            resolve( author )
+        })
+    })
+}
+
+const books = [
+     ...
+     {
+         title : "Animal Farm",
+         description : "Is an allegoircal novella by George Orwell.",
+         author : 3 // this is an ID of author ( data what pass to middleware )
+     },
+     ...
+]
+
+qreal.use('author', ( id ) => {
+     return find( authors , { id } )
+})
+
+qreal(books, {
+     title : '',
+     author : {
+         $ignore : ['id']
+     }
+}, ( result ) => {
+   console.log( result )
+})
+
+// Result
+[
+     ...
+     {
+         title : "Animal Farm",
+         author : {
+             name : "George Orwell",
+             age : 46
+         }
+     },
+     ...
+]
+```
+
 ## License
 
 You can make deep restructure data
 
 [MIT](https://github.com/AbrahemAlhofe/qrealjs/blob/master/LICENSE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+

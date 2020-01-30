@@ -1,4 +1,5 @@
-var _ = require('lodash');
+const _ = require('lodash');
+
 // Utilities
 // =====================================
 const $warn = (msg) => { console.log( new Error(`Qreal [WARN] : ${msg}`) ) }
@@ -18,6 +19,9 @@ const $castFunction = (data) => _.isFunction(data) ? data:() => data
 
 const $merge = (value, include, key) => {
   include = $castFunction(include)(value, key)
+
+  // WARN : if include returned undefined data
+  if ( !include ) { $warn(`$include return "${ include }"`) }
 
   if ( _.isString( value ) ) {
 
@@ -71,20 +75,56 @@ const $take = ( data, argument ) => {
   return _.slice(data, from, to)
 }
 
+const $async = ( object, middleware, callBack, result = [] ) => {
+  // index of ping pong loop
+  var index = 0
 
-function qreal ( data, structre ) {
+  // get keys of object
+  let keys = Object.keys( object )
+
+  // ping : get data from middleware function and add it to result
+  function ping() {
+    // get key in index n
+    let key = keys[index]
+    // get items by key
+    let item = object[ key ]
+
+    // pass item and key of it and done function to middleware
+    middleware( item, key, (data, keyName) => {
+      // increment index to get next key
+      index += 1
+      // add data to result with keyName was passed or key
+      result[ keyName || key ] = data
+      // call check function
+      pong()
+    })
+
+  }
+
+  // pong : check if done call callBack function else re-call ping
+  function pong() {
+    if ( index > keys.length - 1 ) { callBack( result ) } else { ping() }
+  }
+
+  // start loop function
+  ping()
+
+  // return result if data is sync
+  return result
+}
+
+function qreal ( data, structure, callBack = () => {}) {
   // cast data if it does not array
   data = _.castArray(data)
 
-  // assign value of methods in structre to default methods
+  // assign value of methods in structure to default methods
   const methods = _.assign({
     $take : data.length,
     $ignore : [],
     $include : () => ({}),
     $keyName : '@',
     $value : '@'
-  }, structre)
-
+  }, structure)
 
   // resize data before restructure it
   data = $take( data, methods.$take )
@@ -93,19 +133,18 @@ function qreal ( data, structre ) {
   var queries = _.omitBy( methods, (_, key ) => key[0] === "$" )
 
   // restructure data
-  return _.reduce( data, (result, value, key) => {
-
+  return $async(data, ( value, key, cb ) => {
     let parse = $parse( value, key )
 
-    // if $value function select items what returned and set [ value ] value $value
-    if ( _.isFunction(structre.$value) ) {
-      for ( let item in structre.$value(value, key) ) { queries[item] = '' }
-      value = structre.$value(value, key)
+    // if $value is function select items what returned and set [ value ] value $value
+    if ( _.isFunction(structure.$value) ) {
+      for ( let item in structure.$value(value, key) ) { queries[item] = '' }
+      value = structure.$value(value, key)
     }
 
     // set $keyName and $value methods by default value and key name of object
-    methods.$value = parse(structre.$value, value)
-    methods.$keyName = parse(structre.$keyName, key)
+    methods.$value = parse(structure.$value, value)
+    methods.$keyName = parse(structure.$keyName, key)
 
     // Include
     // ================================================
@@ -116,10 +155,6 @@ function qreal ( data, structre ) {
 
     // add key names of data included to queries
     for ( let item in methods.$include(value, key) ) { queries[item] = '' }
-
-    // WARN : if include returned undefined data
-    if ( !include ) { $warn('$include return undefined') }
-
 
     // Igore
     // ================================================
@@ -132,49 +167,54 @@ function qreal ( data, structre ) {
       for ( let item in methods.$value ) { queries[item] = '' }
     }
 
+    if ( !_.isObject( methods.$value ) ) { cb( methods.$value, methods.$keyName ); return }
+
     // get data by queries
-    if ( _.isObject( methods.$value ) ) {
-      methods.$value = _.mapValues( queries, ( query, key ) => {
-        // get value of data from object
-        let context = methods.$value[ key ]
-        let hadMiddlewares = qreal.middlewares[key]
+    $async( queries, ( query, key, done ) => {
+      // get value of data from object
+      let context = methods.$value[ key ]
+      let hadMiddlewares = qreal.middlewares[key]
 
-        // if query key had an middlewares run it
+      function restructure( data ) {
+        if ( !_.isObject( query ) ) { done( data ); return }
+
+        /*
+          restructure query object,
+          and wrap it to make qreal not make deep restructure again
+        */
+
         if ( hadMiddlewares ) {
-          context = qreal.middlewares[key].pass( context )
+          qreal(data, query, ( subObject ) => {
+            subObject = ( _.isArray( data ) ) ? _.toArray( subObject ) : subObject[0]
+            // parse data then put it in value
+            done( subObject )
+          })
+        } else {
+          qreal([ data ], query, ( subObject ) => {
+            // get first item form subObject because qreal return array and we need the result
+            subObject = subObject[0]
+            subObject = ( _.isArray( data ) ) ? _.toArray( subObject ) : subObject
+            // parse data then put it in value
+            done( subObject )
+          })
         }
 
-        // WARN : if query is worng
-        if ( _.isUndefined(context) ) {
-          if ( !_.isArray( methods.$value ) ) { $warn(`[ ${key} ] is undefined`) }
-        }
+      }
 
-        // deep restructure data
-        if ( _.isObject(query) ) {
-          /*
-            restructure query object,
-            and wrap it to make qreal not make deep restructure again
-          */
-          let subObject = qreal([ context ], query )[0]
-          
-          if ( hadMiddlewares ) {
-            subObject = qreal(context, query )
-            if ( _.isObject(context) && !_.isArray(context) ) { subObject = subObject[0] }
-          }
+      // if query key had an middlewares run it
+      if ( hadMiddlewares ) {
+        qreal.middlewares[key].pass( context , ( context ) => {
+          restructure( context[0] )
+        })
+      } else {
+        restructure( context )
+      }
 
-          context = ( _.isArray( context ) ) ? _.toArray( subObject ) : subObject
-        }
-
-        // parse data then put it in value
-        return context
-      })
-    }
-
-    // push restructured item to result
-    result[ methods.$keyName ] = methods.$value
-
-    return result
-  }, ( methods.$keyName !== '@' ) ? {}:[] )
+    }, ( value ) => {
+      // push restructured item to result
+      cb( value, methods.$keyName )
+    }, ( methods.$keyName !== '@' ) ? {}:[] )
+  }, callBack, ( methods.$keyName !== '@' ) ? {}:[] )
 
 }
 
@@ -183,18 +223,23 @@ qreal.middlewares = {}
 
 // add a middleware to data
 qreal.use = function ( key, middleware ) {
-  var array = [ middleware ]
-
-  array.middlewares = qreal.middlewares[key]
-
   // pass data to all middlewares of data as a waterflow
-  array.pass = function (data) {
-    for ( let middleware of this ) {
-      const val = middleware( data )
-      if ( typeof val !== 'object' ) { $warn(`middleware of ${ key } should return Object`); break }
-      data = val
-    }
-    return data
+  Array.prototype.pass = function (data, callBack) {
+
+    $async( qreal.middlewares[key] , ( middleware, index, done ) => {
+      const func = ( value ) => {
+        if ( typeof value !== 'object' ) { $warn(`middleware of ${ key } should return Object`) }
+        done( value )
+      }
+
+      if ( middleware( data ).then ) {
+        middleware( data ).then( func )
+      } else {
+        func( middleware( data ) )
+      }
+
+    }, callBack)
+
   };
 
   // if data had an space in middlwares push new middleware to it
@@ -202,9 +247,8 @@ qreal.use = function ( key, middleware ) {
     qreal.middlewares[key].push(middleware)
   } else {
     // create space in middleware for data
-    qreal.middlewares[key] = array
+    qreal.middlewares[key] = [ middleware ]
   }
-
 }
 
 module.exports = qreal

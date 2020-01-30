@@ -1,4 +1,4 @@
-const qreal = require('../qreal');
+const qreal = require('./index.js');
 const _ = require('lodash');
 
 // Utilities
@@ -45,18 +45,17 @@ const AuthorSchema = {
 //
 test('restructure data by select items', () => {
 
-  const result = qreal(BookSchema, {
-    title : "",
-    description : ""
-  })
-
   const expected = [{
     title : BookSchema.title,
     description : BookSchema.description,
   }]
 
-  expect(result).toEqual( expected )
+  const result = qreal(BookSchema, {
+    title : "",
+    description : ""
+  })
 
+  expect(result).toEqual( expected )
 })
 
 test('deep restructure data by select items', () => {
@@ -298,4 +297,41 @@ test('get name of author in addition to title and id of each book he had', () =>
   }]
 
   expect(result).toEqual(expected)
+})
+
+test('get name and age of author of each book he had with ( Promise )', ( done ) => {
+  const expected = [{
+    author : {
+      name : AuthorSchema.name,
+      age : AuthorSchema.age
+    }
+  }]
+
+  const find = ( id ) => {
+    return new Promise((res, rej) => {
+
+      setTimeout(() => {
+        if ( id === 0 ) {
+          res( AuthorSchema )
+        }
+      }, 500)
+
+    })
+  }
+
+  qreal.use('author', ( id ) => {
+    const author = find( id )
+    return author
+  })
+
+  const result = qreal(BookSchema, {
+    author : {
+      name : '',
+      age : ''
+    }
+  }, ( result ) => {
+    expect(result).toEqual(expected)
+    done()
+  })
+
 })
