@@ -178,6 +178,7 @@ function qreal ( data, structure, callBack = () => {}) {
       let context = methods.$value[ key ]
       let hadMiddlewares = qreal.middlewares[key]
 
+
       function restructure( data ) {
         if ( !_.isObject( query ) ) { done( data ); return }
 
@@ -187,6 +188,7 @@ function qreal ( data, structure, callBack = () => {}) {
         */
 
         if ( hadMiddlewares ) {
+          qreal.middlewares = hadMiddlewares
           qreal(data, query, ( subObject ) => {
             subObject = ( _.isArray( data ) ) ? _.toArray( subObject ) : subObject[0]
             // parse data then put it in value
@@ -206,9 +208,13 @@ function qreal ( data, structure, callBack = () => {}) {
 
       // if query key had an middlewares run it
       if ( hadMiddlewares ) {
-        qreal.middlewares[key].pass( context , ( context ) => {
-          restructure( context[0] )
-        })
+        if ( !_.isArray( hadMiddlewares ) ) {
+          restructure( context )
+        } else {
+          hadMiddlewares.pass(key, context , ( context ) => {
+            restructure( context[0] )
+          })
+        }
       } else {
         restructure( context )
       }
@@ -227,12 +233,20 @@ qreal.middlewares = {}
 // add a middleware to data
 qreal.use = function ( key, middleware ) {
   // pass data to all middlewares of data as a waterflow
-  Array.prototype.pass = function (data, callBack) {
+
+  Array.prototype.pass = function (key, data, callBack) {
 
     $async( qreal.middlewares[key] , ( middleware, index, done ) => {
       const func = ( value ) => {
         if ( typeof value !== 'object' ) { $warn(`middleware of ${ key } should return Object`) }
         done( value )
+      }
+
+      if ( _.isArray( data ) ) {
+        $async( data, ( item, index, done ) => {
+          done( middleware( item ) )
+        }, done)
+        return
       }
 
       if ( middleware( data ).then ) {
@@ -250,7 +264,7 @@ qreal.use = function ( key, middleware ) {
     qreal.middlewares[key].push(middleware)
   } else {
     // create space in middleware for data
-    qreal.middlewares[key] = [ middleware ]
+    _.set(qreal.middlewares, key, [ middleware ])
   }
 }
 

@@ -22,7 +22,12 @@ const BookSchema = {
   tags : ['test', 'good', 'book'],
   publisher : {
     name : 'home screen',
-    country : 'england'
+    country : 'england',
+    books : [
+      { id : 0 },
+      { id : 1 },
+      { id : 2 }
+    ]
   },
   id : 0,
   author : 0
@@ -42,7 +47,7 @@ const AuthorSchema = {
 
 // Tests
 // ==========================
-//
+
 test('restructure data by select items', () => {
 
   const expected = [{
@@ -239,6 +244,19 @@ test('change value of items by String', () => {
 
 })
 
+test('change value of items by String ( Number )', () => {
+
+  const result = qreal(AuthorSchema, {
+    $value : '@age'
+  })
+
+  const expected = [ AuthorSchema.age ]
+
+  expect(result).toEqual( expected )
+
+})
+
+
 test('get name and age of author of each book', () => {
 
   qreal.use('author', ( id ) => {
@@ -267,14 +285,8 @@ test('get name and age of author of each book', () => {
 test('get name of author in addition to title and id of each book he had', () => {
   const books = create( BookSchema, 10 )
 
-  qreal.use('books', ( booksIds ) => {
-    const result = []
-
-    for ( let { id } of booksIds ) {
-      result.push( _.find(books, { id }) )
-    }
-
-    return result
+  qreal.use('books', ({ id }) => {
+    return _.find(books, { id })
   })
 
   const result = qreal(AuthorSchema, {
@@ -334,4 +346,40 @@ test('get name and age of author of each book he had with ( Promise )', ( done )
     done()
   })
 
+})
+
+test('get name and id of books in publisher in BookSchema ( sub middleware )', () => {
+  const expected = [{
+    publisher : {
+      books : create({
+        title : BookSchema.title,
+        id : 0
+      }, 3)
+    }
+  }]
+
+  const find = ( id ) => {
+    const array = [0, 1, 2]
+    if ( array.indexOf(id) != -1 ) {
+      let book = { ...BookSchema }
+      book.id = id
+      return book
+    }
+  }
+
+  qreal.use('publisher.books', ({ id }) => {
+    const book = find( id )
+    return book
+  })
+
+  const result = qreal(BookSchema, {
+    publisher : {
+      books : {
+        title : '',
+        id : ''
+      }
+    }
+  })
+
+  expect(result).toEqual(expected)
 })

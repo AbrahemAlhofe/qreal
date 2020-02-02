@@ -331,22 +331,66 @@ qreal(books, {
 ]
 ```
 
+and you can make sub middleware
+
+```js
+const auhors = [
+ ...
+ {
+     name : 'George Orwell',
+     age : 46,
+     books : [ { id : 9 } ],
+     id : 3
+ },
+ ...
+]
+const find = ( id ) => {
+ return new Promise((resolve, reject) => {
+     authors.find({ id }, ( author ) => {
+         resolve( author )
+     })
+ })
+}
+const books = [
+ ...
+ {
+     title : "Animal Farm",
+     id : 9,
+     description : "Is an allegoircal novella by George Orwell.",
+     author : 3
+ },
+ ...
+]
+qreal.use('author.books', ( id ) => {
+ return find( books, { id } )
+})
+qreal(books, {
+ author : {
+     books : {
+         title: ''
+     }
+ }
+}, ( result ) => {
+ console.log( result )
+})
+// Result
+[
+ ...
+ {
+     author : {
+         books : [
+             { title : "Animal Farm" }
+         ]
+     }
+ },
+ ...
+]
+```
+
 ## License
 
 You can make deep restructure data
 
 [MIT](https://github.com/AbrahemAlhofe/qrealjs/blob/master/LICENSE)
-
-
-
-
-
-
-
-
-
-
-
-
 
 
