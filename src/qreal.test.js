@@ -383,3 +383,40 @@ test('get name and id of books in publisher in BookSchema ( sub middleware )', (
 
   expect(result).toEqual(expected)
 })
+
+test('get name and age of author of each book he had with ( Promise ) two items', ( done ) => {
+  const expected = create({
+    author : {
+      name : AuthorSchema.name,
+      age : AuthorSchema.age
+    }
+  }, 2)
+
+  const find = ( id ) => {
+    return new Promise((res, rej) => {
+
+      setTimeout(() => {
+        if ( id === 0 ) {
+          res( AuthorSchema )
+        }
+      }, 500)
+
+    })
+  }
+
+  qreal.use('author', ( id ) => {
+    const author = find( id )
+    return author
+  })
+
+  const result = qreal( create(BookSchema, 2), {
+    author : {
+      name : '',
+      age : ''
+    }
+  }, ( result ) => {
+    expect(result).toEqual(expected)
+    done()
+  })
+
+})

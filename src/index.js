@@ -188,7 +188,6 @@ function qreal ( data, structure, callBack = () => {}) {
         */
 
         if ( hadMiddlewares ) {
-          qreal.middlewares = hadMiddlewares
           qreal(data, query, ( subObject ) => {
             subObject = ( _.isArray( data ) ) ? _.toArray( subObject ) : subObject[0]
             // parse data then put it in value
@@ -209,6 +208,7 @@ function qreal ( data, structure, callBack = () => {}) {
       // if query key had an middlewares run it
       if ( hadMiddlewares ) {
         if ( !_.isArray( hadMiddlewares ) ) {
+          qreal.middlewares = hadMiddlewares
           restructure( context )
         } else {
           hadMiddlewares.pass(key, context , ( context ) => {
@@ -235,7 +235,6 @@ qreal.use = function ( key, middleware ) {
   // pass data to all middlewares of data as a waterflow
 
   Array.prototype.pass = function (key, data, callBack) {
-
     $async( qreal.middlewares[key] , ( middleware, index, done ) => {
       const func = ( value ) => {
         if ( typeof value !== 'object' ) { $warn(`middleware of ${ key } should return Object`) }
