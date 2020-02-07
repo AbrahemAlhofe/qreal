@@ -96,7 +96,6 @@ test('take only the first three items', () => {
 
 })
 
-
 test('skip only the last three items', () => {
 
   const result = qreal( create(BookSchema), {
@@ -151,6 +150,19 @@ test('take an item has { id : 4 } in addition to 3 items after it', () => {
 
 })
 
+test('take first 10 characters in title of book', () => {
+  const result = qreal( BookSchema , {
+    title : {
+      $take : 10
+    }
+  })
+
+  const expected = [{
+    title : BookSchema.title.slice(0, 10),
+  }]
+
+  expect(result).toEqual( expected )
+})
 
 test('ignore items by select key name of it', () => {
 
@@ -217,7 +229,6 @@ test('change key name of items', () => {
 
 })
 
-
 test('change value of items by Function', () => {
 
   const result = qreal(BookSchema, {
@@ -256,6 +267,21 @@ test('change value of items by String ( Number )', () => {
 
 })
 
+test('change value of [ books ] of Author by String ( method )', () => {
+
+  const result = qreal(AuthorSchema, {
+    books : {
+      $value : '@length'
+    }
+  })
+
+  const expected = [{
+    books : AuthorSchema.books.length
+  }]
+
+  expect(result).toEqual( expected )
+
+})
 
 test('get name and age of author of each book', () => {
 

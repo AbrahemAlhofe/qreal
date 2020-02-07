@@ -50,6 +50,8 @@ const $parse = _.curry( (value, key, method, def) => {
     $method = def
   }
 
+  // console.log( value, $method )
+
   return $method
 } )
 
@@ -117,7 +119,7 @@ const $async = ( object, middleware, callBack, result = [] ) => {
 
 function qreal ( data, structure, callBack = () => {}) {
   // cast data if it does not array
-  data = _.castArray(data)
+  data = ( !_.isString(data) ) ? _.castArray(data) : data
 
   // assign value of methods in structure to default methods
   const methods = _.assign({
@@ -148,7 +150,6 @@ function qreal ( data, structure, callBack = () => {}) {
     methods.$value = parse(structure.$value, value)
     methods.$keyName = parse(structure.$keyName, key)
 
-
     // Include
     // ================================================
 
@@ -178,7 +179,6 @@ function qreal ( data, structure, callBack = () => {}) {
       let context = methods.$value[ key ]
       let hadMiddlewares = qreal.middlewares[key]
 
-
       function restructure( data ) {
         if ( !_.isObject( query ) ) { done( data ); return }
 
@@ -194,10 +194,23 @@ function qreal ( data, structure, callBack = () => {}) {
             done( subObject )
           })
         } else {
-          qreal([ data ], query, ( subObject ) => {
+          // if data is array but it into array to not make deep restructure
+          if ( _.isArray( data ) ) { data = [ data ] }
+
+          qreal(data, query, ( subObject ) => {
+            // if data is string join and wrap it into array to resume process
+            if ( _.isString( data ) ) { subObject = [ subObject.join('') ] }
+
             // get first item form subObject because qreal return array and we need the result
             subObject = subObject[0]
-            subObject = ( _.isArray( data ) ) ? _.toArray( subObject ) : subObject
+
+            if ( _.isArray( context ) ) {
+              let array = _.toArray( subObject )
+              if ( array.length !== 0 ) {
+                subObject = array
+              }
+            }
+
             // parse data then put it in value
             done( subObject )
           })
