@@ -1,6 +1,6 @@
 {
   "name": "qreal",
-  "version": "3.2.1",
+  "version": "3.3.0",
   "description": "a small package to restructure data",
   "main": "qreal.js",
   "scripts": {
@@ -22,7 +22,6 @@
     "lodash": "^4.17.15"
   },
   "devDependencies": {
-    "gulp": "^4.0.2",
     "jest": "^25.1.0",
     "rollup-plugin-uglify-es": "^0.0.1"
   }

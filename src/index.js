@@ -180,7 +180,14 @@ function qreal ( data, structure, callBack = () => {}) {
       let hadMiddlewares = qreal.middlewares[key]
 
       function restructure( data ) {
-        if ( !_.isObject( query ) ) { done( data ); return }
+        if ( !_.isObject( query ) ) {
+          if ( query !== '' ) {
+            let parse = $parse( context, key )
+            data = parse(query, context)
+          }
+          done( data );
+          return
+        }
 
         /*
           restructure query object,
@@ -224,7 +231,7 @@ function qreal ( data, structure, callBack = () => {}) {
           qreal.middlewares = hadMiddlewares
           restructure( context )
         } else {
-          hadMiddlewares.pass(key, context , ( context ) => {
+          hadMiddlewares.pass(key, context, ( context ) => {
             restructure( context[0] )
           })
         }

@@ -215,10 +215,23 @@ qreal(OBJECTS, {
 })
 
 // Result
-{
- 'jack' : 13,
- 'john' : 23
-}
+[ 13, 23 ]
+```
+
+```javascript
+qreal(OBJECT, {
+  address : {
+     $value : '@first'
+  }
+  // OR shorthand
+  address : '@first'
+})
+
+// Result
+[
+   { name : 'jack', address : 'london' },
+   { name : 'john', address : 'berlin' }
+]
 ```
 
 ## Qreal.use( name, middleware )
@@ -392,5 +405,3 @@ qreal(books, {
 You can make deep restructure data
 
 [MIT](https://github.com/AbrahemAlhofe/qrealjs/blob/master/LICENSE)
-
-
