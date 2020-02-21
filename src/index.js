@@ -121,8 +121,11 @@ function qreal ( data, structure, callBack = () => {}) {
   // cast data if it does not array
   data = ( !_.isString(data) ) ? _.castArray(data) : data
 
-  if ( data.length === 0 ) { return [] }
-  
+  if ( data.length === 0 ) {
+    callBack([])
+    return []
+  }
+
   // assign value of methods in structure to default methods
   const methods = _.assign({
     $take : data.length,

@@ -57,6 +57,19 @@ test('pass empty array to qreal', () => {
   expect(result).toEqual( expected )
 })
 
+test('pass empty array to qreal ( callBack )', ( done ) => {
+  const expected = []
+
+  const result = qreal([], {
+    title : "",
+    description : ""
+  }, () => {
+    expect(result).toEqual( expected )
+    done()
+  })
+  
+})
+
 test('restructure data by select items', () => {
 
   const expected = [{
