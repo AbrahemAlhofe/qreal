@@ -18,7 +18,7 @@ const $fillEnd = (arr, chr=' ', length) => _.reverse( $fillStart(arr, chr, lengt
 const $castFunction = (data) => _.isFunction(data) ? data:() => data
 
 const $merge = (value, include, key) => {
-  include = $castFunction(include)(value, key)
+  include = $castFunction(include)(value || {}, key || 0)
 
   // WARN : if include returned undefined data
   if ( !include ) { $warn(`$include return "${ include }"`) }
@@ -121,6 +121,8 @@ function qreal ( data, structure, callBack = () => {}) {
   // cast data if it does not array
   data = ( !_.isString(data) ) ? _.castArray(data) : data
 
+  if ( data.length === 0 ) { return [] }
+  
   // assign value of methods in structure to default methods
   const methods = _.assign({
     $take : data.length,
@@ -135,6 +137,7 @@ function qreal ( data, structure, callBack = () => {}) {
 
   // get queries ( query that doesn't name of it start with '$' ) from methods
   var queries = _.omitBy( methods, (_, key ) => key[0] === "$" )
+
 
   // restructure data
   return $async(data, ( value, key, cb ) => {

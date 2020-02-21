@@ -47,6 +47,15 @@ const AuthorSchema = {
 
 // Tests
 // ==========================
+test('pass empty array to qreal', () => {
+  const result = qreal([], {
+    title : "",
+    description : ""
+  })
+  const expected = []
+
+  expect(result).toEqual( expected )
+})
 
 test('restructure data by select items', () => {
 
@@ -461,3 +470,23 @@ test('get name and age of author of each book he had with ( Promise ) two items'
   })
 
 })
+
+// client side
+// qlink.listen('problems', '', {
+//   title : '',
+//   description : '',
+//   answers : '@length'
+// }, p => vm.problems = p)
+//
+// // Server side
+// const problem = qlink.Router()
+//
+// problem.get((search, query) => {
+//   return find({ title : { $regex : search, $options : 'gi' } })
+// })
+//
+// problem.use('author', () => {
+//   return author.find()
+// })
+//
+// qlink.use('problems', problem)
