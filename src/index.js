@@ -1,3 +1,4 @@
+/* eslint-disable */
 const _ = require('lodash');
 
 // Utilities
@@ -11,6 +12,12 @@ const $fillStart = (arr, chr=' ', length) => {
   const placeholder = _.fill( Array( length - arr.length ) , chr)
   // merge array and placeholder to make length of it what user pass
   return [ ...placeholder, ...arr ]
+}
+
+const $isFalsy = (data) => {
+  if ( !!data ) return false
+  if ( !_.isNumber( data ) ) return true
+  return false
 }
 
 const $fillEnd = (arr, chr=' ', length) => _.reverse( $fillStart(arr, chr, length) )
@@ -45,7 +52,7 @@ const $parse = _.curry( (value, key, method, def) => {
   // if value of method is string , use method as a query to get value
   if ( $isString( $method ) ) {
     $method = _.get(value, _.trimStart($method, '@'), null)
-    if ( !$method ) { $method = def }
+    if ( $isFalsy( $method ) ) { $method = def }
   } else {
     $method = def
   }
@@ -186,6 +193,7 @@ function qreal ( data, structure, callBack = () => {}) {
       let hadMiddlewares = qreal.middlewares[key]
 
       function restructure( data ) {
+
         if ( !_.isObject( query ) ) {
           if ( query !== '' ) {
             let parse = $parse( context, key )
@@ -262,26 +270,17 @@ qreal.use = function ( key, middleware ) {
 
   Array.prototype.pass = function (key, data, callBack) {
     $async( qreal.middlewares[key] , ( middleware, index, done ) => {
-      const func = ( value ) => {
-        if ( typeof value !== 'object' ) { $warn(`middleware of ${ key } should return Object`) }
+
+      $async( _.castArray( data ), ( item, index, done ) => {
+        middleware( item, function ( value ) {
+          done( value )
+        })
+      }, (value) => {
+        if ( !_.isArray( data ) ) { value = value[0] }
         done( value )
-      }
-
-      if ( _.isArray( data ) ) {
-        $async( data, ( item, index, done ) => {
-          done( middleware( item ) )
-        }, done)
-        return
-      }
-
-      if ( middleware( data ).then ) {
-        middleware( data ).then( func )
-      } else {
-        func( middleware( data ) )
-      }
+      })
 
     }, callBack)
-
   };
 
   // if data had an space in middlwares push new middleware to it

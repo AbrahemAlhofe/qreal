@@ -110,7 +110,7 @@ qreal(data, {
   // take item in index 3 in addition to 4 itmes after it
   $take : [ 3, 4 ]
 
-  // take item had { name : "lorem" } in addition to 4 items after it 
+  // take item had { name : "lorem" } in addition to 4 items after it
   $take : [ { name : "lorem" }, 4 ]
 }
 ```
@@ -148,9 +148,9 @@ TYPE : $Function$
 You can include items if you want 😜.
 
 ```javascript
-qreal(data, { 
+qreal(data, {
      $include : (obj, key) => ({ adult : obj.age > 18 }),
-     name : '' 
+     name : ''
 })
 
 // Result
@@ -236,8 +236,7 @@ qreal(OBJECT, {
 
 ## Qreal.use( name, middleware )
 
-##### ARGS ( arguments what pass to middleware ) : [ ( value of data ) ]
-
+##### ARGS ( arguments what pass to middleware ) : [ ( value of data ) ] and next function
 Qreal.use method provide you to add middleware to data that can use for relationships between data
 
 ```javascript
@@ -251,7 +250,7 @@ const auhors = [
     },
     ...
 ]
-const books = [ 
+const books = [
     ...
     {
        title : "Animal Farm",
@@ -261,18 +260,20 @@ const books = [
     ...
 ]
 
-qreal.use('author', ( id ) => {
-    return _.find( authors , { id } )
+qreal.use('author', ( id, done ) => {
+  done(
+    _.find( authors , { id } )
+  )
 })
 
 qreal(books, {
    title : '',
    author : {
-      $ignore : ['id'] 
+      $ignore : ['id']
    }
 })
 
-// Result 
+// Result
 [
     ...
     {
@@ -285,65 +286,6 @@ qreal(books, {
     ...
 ]
 ```
-
-you can return promise in middleware,, if you make that you should put your left code into call back qreal
-
-```javascript
-const auhors = [
-     ...
-     {
-         name : 'George Orwell',
-         age : 46,
-         id : 3
-     },
-     ...
-]
-
-const find = ( id ) => {
-    return new Promise((resolve, reject) => {
-        authors.find({ id }, ( author ) => {
-            resolve( author )
-        })
-    })
-}
-
-const books = [
-     ...
-     {
-         title : "Animal Farm",
-         description : "Is an allegoircal novella by George Orwell.",
-         author : 3 // this is an ID of author ( data what pass to middleware )
-     },
-     ...
-]
-
-qreal.use('author', ( id ) => {
-     return find( authors , { id } )
-})
-
-qreal(books, {
-     title : '',
-     author : {
-         $ignore : ['id']
-     }
-}, ( result ) => {
-   console.log( result )
-})
-
-// Result
-[
-     ...
-     {
-         title : "Animal Farm",
-         author : {
-             name : "George Orwell",
-             age : 46
-         }
-     },
-     ...
-]
-```
-
 and you can make sub middleware
 
 ```js
@@ -357,13 +299,7 @@ const auhors = [
  },
  ...
 ]
-const find = ( id ) => {
- return new Promise((resolve, reject) => {
-     authors.find({ id }, ( author ) => {
-         resolve( author )
-     })
- })
-}
+
 const books = [
  ...
  {
@@ -374,9 +310,13 @@ const books = [
  },
  ...
 ]
-qreal.use('author.books', ( id ) => {
- return find( books, { id } )
+
+qreal.use('author.books', ( id, done ) => {
+    authors.find({ id }, ( author ) => {
+        done( author )
+    })
 })
+
 qreal(books, {
  author : {
      books : {

@@ -63,11 +63,11 @@ test('pass empty array to qreal ( callBack )', ( done ) => {
   const result = qreal([], {
     title : "",
     description : ""
-  }, () => {
+  }, ( result ) => {
     expect(result).toEqual( expected )
     done()
   })
-  
+
 })
 
 test('restructure data by select items', () => {
@@ -322,9 +322,9 @@ test('change value of [ books ] of Author by String ( shorthand )', () => {
 
 test('get name and age of author of each book', () => {
 
-  qreal.use('author', ( id ) => {
+  qreal.use('author', ( id, done ) => {
     if ( id === 0 ) {
-      return AuthorSchema
+      done( AuthorSchema )
     }
   })
 
@@ -348,8 +348,8 @@ test('get name and age of author of each book', () => {
 test('get name of author in addition to title and id of each book he had', () => {
   const books = create( BookSchema, 10 )
 
-  qreal.use('books', ({ id }) => {
-    return _.find(books, { id })
+  qreal.use('books', ({ id }, done) => {
+    done( _.find(books, { id }) )
   })
 
   const result = qreal(AuthorSchema, {
@@ -374,32 +374,24 @@ test('get name of author in addition to title and id of each book he had', () =>
   expect(result).toEqual(expected)
 })
 
-test('get name and age of author of each book he had with ( Promise )', ( done ) => {
-  const expected = [{
+test('get name and age of author of each book he had with ( Promise ) two items', ( done ) => {
+  const expected = create({
     author : {
       name : AuthorSchema.name,
       age : AuthorSchema.age
     }
-  }]
+  }, 2)
 
-  const find = ( id ) => {
-    return new Promise((res, rej) => {
 
-      setTimeout(() => {
-        if ( id === 0 ) {
-          res( AuthorSchema )
-        }
-      }, 500)
-
-    })
-  }
-
-  qreal.use('author', ( id ) => {
-    const author = find( id )
-    return author
+  qreal.use('author', ( id, done ) => {
+    setTimeout(() => {
+      if ( id === 0 ) {
+        done( AuthorSchema )
+      }
+    }, 500)
   })
 
-  const result = qreal(BookSchema, {
+  const result = qreal( create(BookSchema, 2), {
     author : {
       name : '',
       age : ''
@@ -430,9 +422,8 @@ test('get name and id of books in publisher in BookSchema ( sub middleware )', (
     }
   }
 
-  qreal.use('publisher.books', ({ id }) => {
-    const book = find( id )
-    return book
+  qreal.use('publisher.books', ({ id }, done) => {
+    done( find(id) )
   })
 
   const result = qreal(BookSchema, {
@@ -446,60 +437,3 @@ test('get name and id of books in publisher in BookSchema ( sub middleware )', (
 
   expect(result).toEqual(expected)
 })
-
-test('get name and age of author of each book he had with ( Promise ) two items', ( done ) => {
-  const expected = create({
-    author : {
-      name : AuthorSchema.name,
-      age : AuthorSchema.age
-    }
-  }, 2)
-
-  const find = ( id ) => {
-    return new Promise((res, rej) => {
-
-      setTimeout(() => {
-        if ( id === 0 ) {
-          res( AuthorSchema )
-        }
-      }, 500)
-
-    })
-  }
-
-  qreal.use('author', ( id ) => {
-    const author = find( id )
-    return author
-  })
-
-  const result = qreal( create(BookSchema, 2), {
-    author : {
-      name : '',
-      age : ''
-    }
-  }, ( result ) => {
-    expect(result).toEqual(expected)
-    done()
-  })
-
-})
-
-// client side
-// qlink.listen('problems', '', {
-//   title : '',
-//   description : '',
-//   answers : '@length'
-// }, p => vm.problems = p)
-//
-// // Server side
-// const problem = qlink.Router()
-//
-// problem.get((search, query) => {
-//   return find({ title : { $regex : search, $options : 'gi' } })
-// })
-//
-// problem.use('author', () => {
-//   return author.find()
-// })
-//
-// qlink.use('problems', problem)
