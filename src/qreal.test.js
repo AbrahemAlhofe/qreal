@@ -38,6 +38,7 @@ const AuthorSchema = {
   age : 14,
   avatar : 'https://www.avatar.com/2f3r43f3',
   id : 0,
+  notifications : [],
   books : [
     { id : 0 },
     { id : 4 },
@@ -309,11 +310,13 @@ test('change value of [ books ] of Author by String', () => {
 test('change value of [ books ] of Author by String ( shorthand )', () => {
 
   const result = qreal(AuthorSchema, {
-    books : '@length'
+    books : '@length',
+    notifications : '@length'
   })
 
   const expected = [{
-    books : AuthorSchema.books.length
+    books : AuthorSchema.books.length,
+    notifications : AuthorSchema.notifications.length
   }]
 
   expect(result).toEqual( expected )
