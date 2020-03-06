@@ -194,7 +194,7 @@ function qreal ( data, structure, callBack = () => {}) {
 
       function restructure( data ) {
 
-        if ( !_.isObject( query ) ) {
+        if ( !_.isObject( query ) || _.isArray( query ) ) {
           if ( query !== '' ) {
             let parse = $parse( context, key )
             data = parse(query, context)

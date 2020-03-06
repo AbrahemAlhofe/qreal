@@ -441,21 +441,33 @@ test('get name and id of books in publisher in BookSchema ( sub middleware )', (
   expect(result).toEqual(expected)
 })
 
-test('pass data as a function and pass query to this data', () => {
+test('support data as a function', () => {
   function BookWithCustomeId (id) {
-    const BookSchema_ = Object.assign({}, BookSchema)
-    return Object.assign(BookSchema_, { id })
+    return Object.assign(BookSchema, { id })
   }
 
   const result = qreal({ BookWithCustomeId }, {
     BookWithCustomeId : 12
   })
 
-  const BookSchema_ = Object.assign({}, BookSchema)
-  BookSchema_.id = 12
+  const expected = [{
+    BookWithCustomeId : Object.assign(BookSchema, { id : 12 })
+  }]
+
+  expect(result).toEqual(expected)
+})
+
+test('support data as a function ( array )', () => {
+  function BookWithCustomeTags (tags) {
+    return Object.assign(BookSchema, { tags })
+  }
+
+  const result = qreal({ BookWithCustomeTags }, {
+    BookWithCustomeTags : ['tag1', 'tag2', 'tag3']
+  })
 
   const expected = [{
-    BookWithCustomeId : BookSchema_
+    BookWithCustomeTags : Object.assign(BookSchema, { tags : ['tag1', 'tag2', 'tag3'] })
   }]
 
   expect(result).toEqual(expected)
