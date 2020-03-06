@@ -189,7 +189,9 @@ function qreal ( data, structure, callBack = () => {}) {
     // get data by queries
     $async( queries, ( query, key, done ) => {
       // get value of data from object
-      let context = methods.$value[ key ]
+      console.log( key )
+      let context = $castFunction(methods.$value[ key ])( query )
+      console.log( context )
       let hadMiddlewares = qreal.middlewares[key]
 
       function restructure( data ) {

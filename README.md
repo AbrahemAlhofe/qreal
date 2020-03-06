@@ -31,6 +31,14 @@ const qreal = require('qreal')
 var data = [
    {
        name : 'jack',
+       // OR 
+       name : (style) => {
+           if ( style == 'UpperCase' ) {
+               return 'jack'.toUpperCase()
+           } else {
+               return 'jack'
+           }
+       },
        age : 13,
        address : {
            first : 'london',
@@ -49,6 +57,8 @@ var data = [
 
 qreal(data, {
  name : '',
+ // OR pass data to name as function
+ name : 'UpperCase',
  // you can make an deep restructre to data
  address : {
    first : ''
@@ -237,6 +247,7 @@ qreal(OBJECT, {
 ## Qreal.use( name, middleware )
 
 ##### ARGS ( arguments what pass to middleware ) : [ ( value of data ) ] and next function
+
 Qreal.use method provide you to add middleware to data that can use for relationships between data
 
 ```javascript
@@ -286,6 +297,7 @@ qreal(books, {
     ...
 ]
 ```
+
 and you can make sub middleware
 
 ```js

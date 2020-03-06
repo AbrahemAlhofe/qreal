@@ -440,3 +440,23 @@ test('get name and id of books in publisher in BookSchema ( sub middleware )', (
 
   expect(result).toEqual(expected)
 })
+
+test('pass data as a function and pass query to this data', () => {
+  function BookWithCustomeId (id) {
+    const BookSchema_ = Object.assign({}, BookSchema)
+    return Object.assign(BookSchema_, { id })
+  }
+
+  const result = qreal({ BookWithCustomeId }, {
+    BookWithCustomeId : 12
+  })
+
+  const BookSchema_ = Object.assign({}, BookSchema)
+  BookSchema_.id = 12
+
+  const expected = [{
+    BookWithCustomeId : BookSchema_
+  }]
+
+  expect(result).toEqual(expected)
+})
