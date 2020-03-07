@@ -325,7 +325,7 @@ test('change value of [ books ] of Author by String ( shorthand )', () => {
 
 test('get name and age of author of each book', () => {
 
-  qreal.use('author', ( id, done ) => {
+  qreal.use('author', ( id, object, done ) => {
     if ( id === 0 ) {
       done( AuthorSchema )
     }
@@ -351,7 +351,7 @@ test('get name and age of author of each book', () => {
 test('get name of author in addition to title and id of each book he had', () => {
   const books = create( BookSchema, 10 )
 
-  qreal.use('books', ({ id }, done) => {
+  qreal.use('books', ({ id }, object, done) => {
     done( _.find(books, { id }) )
   })
 
@@ -386,7 +386,7 @@ test('get name and age of author of each book he had with ( Promise ) two items'
   }, 2)
 
 
-  qreal.use('author', ( id, done ) => {
+  qreal.use('author', ( id, object, done ) => {
     setTimeout(() => {
       if ( id === 0 ) {
         done( AuthorSchema )
@@ -425,8 +425,10 @@ test('get name and id of books in publisher in BookSchema ( sub middleware )', (
     }
   }
 
-  qreal.use('publisher.books', ({ id }, done) => {
-    done( find(id) )
+  qreal.use('publisher.books', ({ id }, object, done) => {
+    if ( _.isEqual(object, BookSchema.publisher) ) {
+      done( find(id) )
+    }
   })
 
   const result = qreal(BookSchema, {

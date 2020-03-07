@@ -31,7 +31,7 @@ const qreal = require('qreal')
 var data = [
    {
        name : 'jack',
-       // OR 
+       // OR
        name : (style) => {
            if ( style == 'UpperCase' ) {
                return 'jack'.toUpperCase()
@@ -246,7 +246,7 @@ qreal(OBJECT, {
 
 ## Qreal.use( name, middleware )
 
-##### ARGS ( arguments what pass to middleware ) : [ ( value of data ) ] and next function
+##### ARGS ( arguments what pass to middleware ) : [ ( value of data ) ], Parent Object and next function
 
 Qreal.use method provide you to add middleware to data that can use for relationships between data
 
@@ -271,7 +271,7 @@ const books = [
     ...
 ]
 
-qreal.use('author', ( id, done ) => {
+qreal.use('author', ( id, object, done ) => {
   done(
     _.find( authors , { id } )
   )
@@ -323,7 +323,7 @@ const books = [
  ...
 ]
 
-qreal.use('author.books', ( id, done ) => {
+qreal.use('author.books', ( id, object, done ) => {
     authors.find({ id }, ( author ) => {
         done( author )
     })

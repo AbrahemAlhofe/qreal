@@ -245,7 +245,7 @@ function qreal ( data, structure, callBack = () => {}) {
           qreal.middlewares = hadMiddlewares
           restructure( context )
         } else {
-          hadMiddlewares.pass(key, context, ( context ) => {
+          hadMiddlewares.pass(key, context, methods.$value, ( context ) => {
             restructure( context[0] )
           })
         }
@@ -268,11 +268,11 @@ qreal.middlewares = {}
 qreal.use = function ( key, middleware ) {
   // pass data to all middlewares of data as a waterflow
 
-  Array.prototype.pass = function (key, data, callBack) {
+  Array.prototype.pass = function (key, data, parentObject, callBack) {
     $async( qreal.middlewares[key] , ( middleware, index, done ) => {
 
       $async( _.castArray( data ), ( item, index, done ) => {
-        middleware( item, function ( value ) {
+        middleware( item, parentObject, function ( value ) {
           done( value )
         })
       }, (value) => {
