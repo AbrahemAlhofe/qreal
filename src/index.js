@@ -189,13 +189,13 @@ function qreal ( data, structure, callBack = () => {}) {
     // get data by queries
     $async( queries, ( query, key, done ) => {
       // get value of data from object
-      let context = $castFunction(methods.$value[ key ])( query )
+      let context = methods.$value[ key ]
       let hadMiddlewares = qreal.middlewares[key]
 
       function restructure( data ) {
 
         if ( !_.isObject( query ) || _.isArray( query ) ) {
-          if ( query !== '' ) {
+          if ( $isString(query) ) {
             let parse = $parse( context, key )
             data = parse(query, context)
           }
@@ -241,6 +241,7 @@ function qreal ( data, structure, callBack = () => {}) {
 
       // if query key had an middlewares run it
       if ( hadMiddlewares ) {
+        // query had sub middleware
         if ( !_.isArray( hadMiddlewares ) ) {
           qreal.middlewares = hadMiddlewares
           restructure( context )
@@ -250,7 +251,7 @@ function qreal ( data, structure, callBack = () => {}) {
           })
         }
       } else {
-        restructure( context )
+        restructure( $castFunction(context)( query ) )
       }
 
     }, ( value ) => {

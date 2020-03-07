@@ -474,3 +474,23 @@ test('support data as a function ( array )', () => {
 
   expect(result).toEqual(expected)
 })
+
+test('support data as a function with middleware', () => {
+  function BookWithCustomeTags (tags, moreTags) {
+    return Object.assign(BookSchema, { tags })
+  }
+
+  qreal.use('BookWithCustomeTags', (func, object, done) => {
+    done( func(['tag11', 'tag21', 'tag31']) )
+  })
+
+  const result = qreal({ BookWithCustomeTags }, {
+    BookWithCustomeTags : ['tag1', 'tag2', 'tag3']
+  })
+
+  const expected = [{
+    BookWithCustomeTags : Object.assign(BookSchema, { tags : ['tag11', 'tag21', 'tag31'] })
+  }]
+
+  expect(result).toEqual(expected)
+})
