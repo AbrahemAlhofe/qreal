@@ -1,1 +1,302 @@
-!function(n){"function"==typeof define&&define.amd?define(n):n()}(function(){"use strict";function n(r,u,$=(()=>{})){if(0===(r=i.isString(r)?r:i.castArray(r)).length)return $([]),[];const y=i.assign({$take:r.length,$ignore:[],$include:()=>({}),$keyName:"@",$value:"@"},u);r=s(r,y.$take);var d=i.omitBy(y,(n,i)=>"$"===i[0]);return l(r,(r,s,$)=>{let m=c(r,s);if(i.isFunction(u.$value)){for(let n in u.$value(r,s))d[n]="";r=u.$value(r,s)}y.$value=m(u.$value,r);y.$keyName=m(u.$keyName,s);let v=a(y.$value,y.$include,s);y.$value=v;for(let n in y.$include(r,s))d[n]="";y.$value=f(y.$value,y.$ignore);if(!i.isEmpty(y.$ignore)&&0==i.keys(d).length)for(let n in y.$value)d[n]="";if(!i.isObject(y.$value))return void $(y.$value,y.$keyName);l(d,(r,u,a)=>{function f(o){if(!i.isObject(r)||i.isArray(r)){if(t(r)){let n=c(s,u);o=n(r,o)}return void a(o)}l?n(o,r,n=>{n=i.isArray(o)?i.toArray(n):n[0];a(n)}):(i.isArray(o)&&!i.isObject(o[0])&&(r.$value&&e(`use shorthand of $value method in ${u} query`),o=[o]),n(o,r,n=>{i.isString(o)&&(n=[n.join("")]);i.isArray(s)||i.isObject(s[0])||(n=n[0]);if(i.isArray(s)&&!i.isObject(s[0])){let e=i.toArray(n[0]);0!==e.length&&(n=e)}a(n)}))}let s=y.$value[u];let l=n.middlewares[u];l?i.isArray(l)?l.pass(u,s,y.$value,r,n=>{f(n[0])}):(n.middlewares=l,f(s)):f(o(s)(r))},n=>{$(n,y.$keyName)},"@"!==y.$keyName?{}:[])},$,"@"!==y.$keyName?{}:[])}const i=require("lodash"),e=n=>{console.log(new Error(`Qreal [WARN] : ${n}`))},t=n=>i.isString(n)&&""!==n,r=(n,e=" ",t)=>{const r=i.fill(Array(t-n.length),e);return[...r,...n]},u=n=>{if(n)return!1;if(!i.isNumber(n))return!0;return!1},o=n=>i.isFunction(n)?n:()=>n,a=(n,t,r)=>{t=o(t)(n||{},r||0);t||e(`$include return "${t}"`);i.isString(n)&&(i.isArray(t)&&(t=t.join("")),i.isEmpty(t)&&(t=""),n+=i.toString(t));i.isObject(n)&&(n=i.merge(n,t));return n},c=i.curry((n,e,r,a)=>{let c=o(r)(n,e);t(c)?(c=i.get(n,i.trimStart(c,"@"),null),u(c)&&(c=a)):c=a;return c}),f=(n,e)=>{if(i.isArray(n))return i.pullAll(n,e);if(i.isObject(n))return i.omit(n,e);return n},s=(n,e)=>{let t=i.take(i.castArray(e),2);let[u,o]=r(t,0,2);u=-1!==i.findIndex(n,u)?i.findIndex(n,u):u;o=u+o+t.length-1;return i.slice(n,u,o)},l=(n,i,e,t=[])=>{function r(){let e=a[o],r=n[e];i(r,e,(n,i)=>{o+=1;t[i||e]=n;u()})}function u(){o>a.length-1?e(t):r()}var o=0;let a=Object.keys(n);r();return t};n.middlewares={},n.use=function(e,t){Array.prototype.pass=function(e,t,r,u,o){l(n.middlewares[e],(n,e,o)=>{l(i.castArray(t),(i,e,t)=>{n(i,r,function(n){t(n)},u)},n=>{i.isArray(t)||(n=n[0]);o(n)})},o)},n.middlewares[e]?n.middlewares[e].push(t):i.set(n.middlewares,e,[t])},module.exports=n});
+/* eslint-disable */
+const _ = require('lodash');
+
+// Utilities
+// =====================================
+const $warn = (msg) => { console.log( new Error(`Qreal [WARN] : ${msg}`) ) }
+
+const $isString = ( str ) => _.isString(str) && str !== ''
+
+const $fillStart = (arr, chr=' ', length) => {
+  // make array fill with < chr >
+  const placeholder = _.fill( Array( length - arr.length ) , chr)
+  // merge array and placeholder to make length of it what user pass
+  return [ ...placeholder, ...arr ]
+}
+
+const $isFalsy = (data) => {
+  if ( !!data ) return false
+  if ( !_.isNumber( data ) ) return true
+  return false
+}
+
+const $fillEnd = (arr, chr=' ', length) => _.reverse( $fillStart(arr, chr, length) )
+
+const $castFunction = (data) => _.isFunction(data) ? data:() => data
+
+const $merge = (value, include, key) => {
+  include = $castFunction(include)(value || {}, key || 0)
+
+  // WARN : if include returned undefined data
+  if ( !include ) { $warn(`$include return "${ include }"`) }
+
+  if ( _.isString( value ) ) {
+
+    if ( _.isArray(include) ) { include = include.join('') }
+    if ( _.isEmpty(include) ) { include = '' }
+
+    value = value + _.toString( include )
+
+  }
+
+  if ( _.isObject( value ) ) {
+    value = _.merge( value, include )
+  }
+
+  return value
+}
+
+const $parse = _.curry( (value, key, method, def) => {
+  let $method = $castFunction( method )(value, key)
+
+  // if value of method is string , use method as a query to get value
+  if ( $isString( $method ) ) {
+    $method = _.get(value, _.trimStart($method, '@'), null)
+    if ( $isFalsy( $method ) ) { $method = def }
+  } else {
+    $method = def
+  }
+
+  return $method
+} )
+
+const $ignore = ( object, items ) => {
+  // if [ object ] is array remove all items by value of it
+  if ( _.isArray(object) ) { return _.pullAll(object, items) }
+  // if [ object ] is object remove all items by keyNames of items
+  if ( _.isObject(object)  ) { return _.omit(object, items) }
+  return object
+}
+
+const $take = ( data, argument ) => {
+  // take only first two itmes in take argument
+  let take = _.take( _.castArray(argument), 2)
+
+  // placeholding [ take ]
+  let [from, to] = $fillStart(take, 0, 2)
+
+  // if [ form ] attribute object get index of it if not keep it
+  from = ( _.findIndex(data, from) !== -1 ) ? _.findIndex(data, from) : from
+
+  // convert [ to ] attribute to index syntax to make it work with slice
+  to = from + to + take.length - 1
+
+  return _.slice(data, from, to)
+}
+
+const $async = ( object, middleware, callBack, result = [] ) => {
+  // index of ping pong loop
+  var index = 0
+
+  // get keys of object
+  let keys = Object.keys( object )
+
+  // ping : get data from middleware function and add it to result
+  function ping() {
+    // get key in index n
+    let key = keys[index]
+    // get items by key
+    let item = object[ key ]
+
+    // pass item and key of it and done function to middleware
+    middleware( item, key, (data, keyName) => {
+      // increment index to get next key
+      index += 1
+      // add data to result with keyName was passed or key
+      result[ keyName || key ] = data
+      // call check function
+      pong()
+    })
+
+  }
+
+  // pong : check if done call callBack function else re-call ping
+  function pong() {
+    if ( index > keys.length - 1 ) { callBack( result ) } else { ping() }
+  }
+
+  // start loop function
+  ping()
+
+  // return result if data is sync
+  return result
+}
+
+function qreal ( data, structure, callBack = () => {}) {
+  // cast data if it does not array
+  data = ( !_.isString(data) ) ? _.castArray(data) : data
+
+  if ( data.length === 0 ) {
+    callBack([])
+    return []
+  }
+
+  // assign value of methods in structure to default methods
+  const methods = _.assign({
+    $take : data.length,
+    $ignore : [],
+    $include : () => ({}),
+    $keyName : '@',
+    $value : '@'
+  }, structure)
+
+  // resize data before restructure it
+  data = $take( data, methods.$take )
+
+  // get queries ( query that doesn't name of it start with '$' ) from methods
+  var queries = _.omitBy( methods, (_, key ) => key[0] === "$" )
+
+
+  // restructure data
+  return $async(data, ( value, key, cb ) => {
+    let parse = $parse( value, key )
+
+    // if $value is function select items what returned and set [ value ] value $value
+    if ( _.isFunction(structure.$value) ) {
+      for ( let item in structure.$value(value, key) ) { queries[item] = '' }
+      value = structure.$value(value, key)
+    }
+
+    // set $keyName and $value methods by default value and key name of object
+    methods.$value = parse(structure.$value, value)
+    methods.$keyName = parse(structure.$keyName, key)
+
+    // Include
+    // ================================================
+
+    // include some methods with $include method
+    let include = $merge( methods.$value, methods.$include, key )
+    methods.$value = include
+
+    // add key names of data included to queries
+    for ( let item in methods.$include(value, key) ) { queries[item] = '' }
+
+    // Igore
+    // ================================================
+
+    // ignore some methods with $ignore method
+    methods.$value = $ignore( methods.$value, methods.$ignore )
+
+    // return value of item if [ queries ] is empty and $ignore method is not empty
+    if ( !_.isEmpty( methods.$ignore ) && _.keys(queries).length == 0 ) {
+      for ( let item in methods.$value ) { queries[item] = '' }
+    }
+
+    if ( !_.isObject( methods.$value ) ) { cb( methods.$value, methods.$keyName ); return }
+
+    // get data by queries
+    $async( queries, ( query, key, done ) => {
+      // get value of data from object
+      let context = methods.$value[ key ]
+      let hadMiddlewares = qreal.middlewares[key]
+
+      function restructure( data ) {
+
+        if ( !_.isObject( query ) || _.isArray( query ) ) {
+          if ( $isString(query) ) {
+            let parse = $parse( context, key )
+            data = parse(query, data)
+          }
+          done( data );
+          return
+        }
+
+        /*
+          restructure query object,
+          and wrap it to make qreal not make deep restructure again
+        */
+
+        if ( hadMiddlewares ) {
+          qreal(data, query, ( subObject ) => {
+            subObject = ( _.isArray( data ) ) ? _.toArray( subObject ) : subObject[0]
+            // parse data then put it in value
+            done( subObject )
+          })
+        } else {
+          // if data is not array of objects put it into array to not make deep restructure
+          if ( _.isArray( data ) && !_.isObject( data[0] ) ) {
+             if ( query.$value ) { $warn(`use shorthand of $value method in ${key} query`) }
+             data = [ data ]
+           }
+
+          qreal(data, query, ( subObject ) => {
+            // if data is string join and wrap it into array to resume process
+            if ( _.isString( data ) ) { subObject = [ subObject.join('') ] }
+
+            if ( !_.isArray( context ) && !_.isObject( context[0] ) ) { subObject = subObject[0] }
+
+            if ( _.isArray( context ) && !_.isObject( context[0] ) ) {
+              let array = _.toArray( subObject[0] )
+              if ( array.length !== 0 ) {
+                subObject = array
+              }
+            }
+
+            // parse data then put it in value
+            done( subObject )
+          })
+        }
+
+      }
+
+      // if query key had an middlewares run it
+      if ( hadMiddlewares ) {
+
+        // query had sub middleware and don't had middlewares
+        if ( !hadMiddlewares.middlewares ) {
+          qreal.middlewares = { ..._.omit(hadMiddlewares, 'middlewares'), pass : qreal.middlewares.pass }
+          restructure( context )
+          return
+        }
+
+        qreal.middlewares.pass(key, context, methods.$value, query, ( context ) => {
+          if ( _.keys( hadMiddlewares ).length !== 1 && !!hadMiddlewares ) {
+            qreal.middlewares = { ..._.omit(hadMiddlewares, 'middlewares'), pass : qreal.middlewares.pass }
+          }
+          restructure( context[0] )
+        })
+
+      } else {
+        restructure( $castFunction(context)( query ) )
+      }
+
+    }, ( value ) => {
+      // push restructured item to result
+      cb( value, methods.$keyName )
+    }, ( methods.$keyName !== '@' ) ? {}:[] )
+  }, callBack, ( methods.$keyName !== '@' ) ? {}:[] )
+
+}
+
+// middlewares of data
+qreal.middlewares = {}
+
+// add a middleware to data
+qreal.use = function ( key, middleware ) {
+  // pass data to all middlewares of data as a waterflow
+
+  qreal.middlewares.pass = function (key, data, parentObject, query, callBack) {
+    $async( qreal.middlewares[key].middlewares , ( middleware, index, done ) => {
+
+      $async( _.castArray( data ), ( item, index, done ) => {
+        middleware( item, parentObject, function ( value ) {
+          done( value )
+        }, query)
+      }, (value) => {
+        if ( !_.isArray( data ) ) { value = value[0] }
+        done( value )
+      })
+
+    }, callBack)
+  };
+
+  // if data had an space in middlwares push new middleware to it
+  if ( _.has(qreal.middlewares, key) ) {
+    qreal.middlewares[key].middlewares.push(middleware)
+  } else {
+    // create space in middleware for data
+    _.set(qreal.middlewares, key+'.middlewares', [ middleware ] )
+  }
+}
+
+module.exports = qreal

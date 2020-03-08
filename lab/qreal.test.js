@@ -1,4 +1,4 @@
-const qreal = require('./index.js');
+const qreal = require('../qreal.js');
 const _ = require('lodash');
 
 // Utilities

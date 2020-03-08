@@ -4,8 +4,7 @@
   "description": "a small package to restructure data",
   "main": "qreal.js",
   "scripts": {
-    "build": "rollup --config",
-    "test": "jest src/qreal.test.js"
+    "test": "jest lab/qreal.test.js"
   },
   "repository": "https://github.com/AbrahemAlhofe/qrealjs.git",
   "bugs": "https://github.com/AbrahemAlhofe/qrealjs/issues",
@@ -22,7 +21,6 @@
     "lodash": "^4.17.15"
   },
   "devDependencies": {
-    "jest": "^25.1.0",
-    "rollup-plugin-uglify-es": "^0.0.1"
+    "jest": "^25.1.0"
   }
 }
