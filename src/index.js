@@ -57,8 +57,6 @@ const $parse = _.curry( (value, key, method, def) => {
     $method = def
   }
 
-  // console.log( value, $method )
-
   return $method
 } )
 
@@ -197,7 +195,7 @@ function qreal ( data, structure, callBack = () => {}) {
         if ( !_.isObject( query ) || _.isArray( query ) ) {
           if ( $isString(query) ) {
             let parse = $parse( context, key )
-            data = parse(query, context)
+            data = parse(query, data)
           }
           done( data );
           return
@@ -215,18 +213,20 @@ function qreal ( data, structure, callBack = () => {}) {
             done( subObject )
           })
         } else {
-          // if data is array but it into array to not make deep restructure
-          if ( _.isArray( data ) ) { data = [ data ] }
+          // if data is not array of objects put it into array to not make deep restructure
+          if ( _.isArray( data ) && !_.isObject( data[0] ) ) {
+             if ( query.$value ) { $warn(`use shorthand of $value method in ${key} query`) }
+             data = [ data ]
+           }
 
           qreal(data, query, ( subObject ) => {
             // if data is string join and wrap it into array to resume process
             if ( _.isString( data ) ) { subObject = [ subObject.join('') ] }
 
-            // get first item form subObject because qreal return array and we need the result
-            subObject = subObject[0]
+            if ( !_.isArray( context ) && !_.isObject( context[0] ) ) { subObject = subObject[0] }
 
-            if ( _.isArray( context ) ) {
-              let array = _.toArray( subObject )
+            if ( _.isArray( context ) && !_.isObject( context[0] ) ) {
+              let array = _.toArray( subObject[0] )
               if ( array.length !== 0 ) {
                 subObject = array
               }
@@ -246,7 +246,7 @@ function qreal ( data, structure, callBack = () => {}) {
           qreal.middlewares = hadMiddlewares
           restructure( context )
         } else {
-          hadMiddlewares.pass(key, context, methods.$value, ( context ) => {
+          hadMiddlewares.pass(key, context, methods.$value, query, ( context ) => {
             restructure( context[0] )
           })
         }
@@ -269,13 +269,13 @@ qreal.middlewares = {}
 qreal.use = function ( key, middleware ) {
   // pass data to all middlewares of data as a waterflow
 
-  Array.prototype.pass = function (key, data, parentObject, callBack) {
+  Array.prototype.pass = function (key, data, parentObject, query, callBack) {
     $async( qreal.middlewares[key] , ( middleware, index, done ) => {
 
       $async( _.castArray( data ), ( item, index, done ) => {
         middleware( item, parentObject, function ( value ) {
           done( value )
-        })
+        }, query)
       }, (value) => {
         if ( !_.isArray( data ) ) { value = value[0] }
         done( value )

@@ -40,9 +40,9 @@ const AuthorSchema = {
   id : 0,
   notifications : [],
   books : [
-    { id : 0 },
-    { id : 4 },
-    { id : 9 }
+    { id : 0, name : 'book 1' },
+    { id : 4, name : 'book 2' },
+    { id : 9, name : 'book 3' }
   ]
 }
 
@@ -89,13 +89,33 @@ test('restructure data by select items', () => {
 test('deep restructure data by select items', () => {
 
   const result = qreal(BookSchema, {
-    title : "",
-    publisher : { name : "" }
+    title : '',
+    publisher : { name : '' }
   })
 
   const expected = [{
     title : BookSchema.title,
     publisher : { name : BookSchema.publisher.name }
+  }]
+
+  expect(result).toEqual( expected )
+
+})
+
+test('deep restructure data by select items ( array )', () => {
+
+  const result = qreal(AuthorSchema, {
+    books : {
+      name : ''
+    }
+  })
+
+  const expected = [{
+    books : [
+      { name : 'book 1' },
+      { name : 'book 2' },
+      { name : 'book 3' }
+    ]
   }]
 
   expect(result).toEqual( expected )
@@ -290,23 +310,6 @@ test('change value of items by String ( Number )', () => {
 
 })
 
-
-test('change value of [ books ] of Author by String', () => {
-
-  const result = qreal(AuthorSchema, {
-    books : {
-      $value : '@length'
-    }
-  })
-
-  const expected = [{
-    books : AuthorSchema.books.length
-  }]
-
-  expect(result).toEqual( expected )
-
-})
-
 test('change value of [ books ] of Author by String ( shorthand )', () => {
 
   const result = qreal(AuthorSchema, {
@@ -491,6 +494,23 @@ test('support data as a function with middleware', () => {
   const expected = [{
     BookWithCustomeTags : Object.assign(BookSchema, { tags : ['tag11', 'tag21', 'tag31'] })
   }]
+
+  expect(result).toEqual(expected)
+})
+
+test('pass query to middlewares', () => {
+
+  qreal.use('title', (title, object, done, query) => {
+    if ( query == 'UpperCase' ) {
+      done( title.toUpperCase() )
+    }
+  })
+
+  const result = qreal(BookSchema, {
+    title : 'UpperCase'
+  })
+
+  const expected = [ { title : BookSchema.title.toUpperCase() } ]
 
   expect(result).toEqual(expected)
 })

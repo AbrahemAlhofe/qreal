@@ -230,10 +230,7 @@ qreal(OBJECTS, {
 
 ```javascript
 qreal(OBJECT, {
-  address : {
-     $value : '@first'
-  }
-  // OR shorthand
+  // WARN : use shorthand of $value method on sub queries
   address : '@first'
 })
 
@@ -246,7 +243,7 @@ qreal(OBJECT, {
 
 ## Qreal.use( name, middleware )
 
-##### ARGS ( arguments what pass to middleware ) : [ ( value of data ) ], Parent Object and next function
+##### ARGS ( arguments what pass to middleware ) : [ ( value of data ) ], Parent Object, query value and next function
 
 Qreal.use method provide you to add middleware to data that can use for relationships between data
 
@@ -350,6 +347,43 @@ qreal(books, {
  },
  ...
 ]
+```
+
+OR use value of query to do some thing
+
+```js
+
+const Book = {
+  title : '452 Fehrenhight',
+  description : 'be or not to be this is not any thing :>',
+  tags : ['test', 'good', 'book'],
+  publisher : {
+    name : 'home screen',
+    country : 'england',
+    books : [
+      { id : 0 },
+      { id : 1 },
+      { id : 2 }
+    ]
+  },
+  id : 0,
+  author : 0
+}
+
+qreal.use('title', (title, object, done, query) => {
+  if ( query == 'UpperCase' ) {
+    done( title.toUpperCase() )
+  }
+})
+
+qreal(Book, {
+  title : 'UpperCase'
+})
+
+// Result
+{
+  title : "452 FEHRENHIGHT"
+}
 ```
 
 ## License
