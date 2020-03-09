@@ -249,7 +249,7 @@ function qreal ( data, structure, callBack = () => {}) {
           return
         }
 
-        qreal.middlewares.pass(key, context, methods.$value, query, ( context ) => {
+        qreal.middlewares.pass(key, context, value, query, ( context ) => {
           if ( _.keys( hadMiddlewares ).length !== 1 && !!hadMiddlewares ) {
             qreal.middlewares = { ..._.omit(hadMiddlewares, 'middlewares'), pass : qreal.middlewares.pass }
           }

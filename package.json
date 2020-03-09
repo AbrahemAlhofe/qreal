@@ -1,6 +1,6 @@
 {
   "name": "qreal",
-  "version": "3.6.1",
+  "version": "3.6.2",
   "description": "a small package to restructure data",
   "main": "qreal.js",
   "scripts": {
