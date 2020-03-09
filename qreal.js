@@ -291,12 +291,14 @@ qreal.use = function ( key, middleware ) {
   };
 
   // if data had an space in middlwares push new middleware to it
-  if ( _.has(qreal.middlewares, key) ) {
-    qreal.middlewares[key].middlewares.push(middleware)
-  } else {
-    // create space in middleware for data
-    _.set(qreal.middlewares, key+'.middlewares', [ middleware ] )
+  if ( typeof qreal.middlewares[key] !== "undefined" ) {
+    if  ( qreal.middlewares[key].middlwares ) {
+      qreal.middlewares[key].middlewares.push(middleware)
+      return
+    }
   }
+  // create space in middleware for data
+  _.set(qreal.middlewares, `${key}.middlewares`, [ middleware ] )
 }
 
 module.exports = qreal
