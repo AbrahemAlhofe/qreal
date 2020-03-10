@@ -152,13 +152,6 @@ function qreal ( data, structure, callBack = () => {}) {
   return $async(data, ( value, key, cb ) => {
     let parse = $parse( value, key )
     var payload = _.clone(value)
-
-    // Igore
-    // ================================================
-    // ignore some methods with $ignore method
-    payload = $ignore( payload, methods.$ignore )
-
-
     // if $value is function select items what returned and set [ value ] value $value
     if ( _.isFunction(methods.$value) ) {
       for ( let item in methods.$value(value, key) ) { queries[item] = '' }
@@ -178,6 +171,11 @@ function qreal ( data, structure, callBack = () => {}) {
     // add key names of data included to queries
     for ( let item in methods.$include(value, key) ) { queries[item] = '' }
 
+
+    // Igore
+    // ================================================
+    // ignore some methods with $ignore method
+    payload = $ignore( payload, methods.$ignore )
 
     // return value of item if [ queries ] is empty and $ignore method is not empty
     if ( _.keys(queries).length == 0 ) {
@@ -256,7 +254,7 @@ function qreal ( data, structure, callBack = () => {}) {
           return
         }
 
-        qreal.middlewares.pass(key, context, value, query, ( context ) => {
+        qreal.middlewares.pass(key, context, { ...value, ...methods.$include(value, methods.$keyName) }, query, ( context ) => {
           if ( _.keys( hadMiddlewares ).length !== 1 && !!hadMiddlewares ) {
             qreal.middlewares = {
               ..._.omit(hadMiddlewares, 'middlewares'),
@@ -274,7 +272,7 @@ function qreal ( data, structure, callBack = () => {}) {
 
     }, ( value ) => {
       let parse = $parse( value, methods.$keyName )
-      
+
       // set $value method by default value and key name of object
       value = parse(methods.$value, value)
 
