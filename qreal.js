@@ -81,7 +81,9 @@ const $take = ( data, argument ) => {
   // convert [ to ] attribute to index syntax to make it work with slice
   to = from + to + take.length - 1
 
-  return _.slice(data, from, to)
+  let slice = _.slice(data, from, to)
+
+  return slice
 }
 
 const $async = ( object, middleware, callBack, result = [] ) => {
@@ -146,48 +148,51 @@ function qreal ( data, structure, callBack = () => {}) {
   // get queries ( query that doesn't name of it start with '$' ) from methods
   var queries = _.omitBy( methods, (_, key ) => key[0] === "$" )
 
-
   // restructure data
   return $async(data, ( value, key, cb ) => {
     let parse = $parse( value, key )
+    var payload = _.clone(value)
+
+    // Igore
+    // ================================================
+    // ignore some methods with $ignore method
+    payload = $ignore( payload, methods.$ignore )
+
 
     // if $value is function select items what returned and set [ value ] value $value
-    if ( _.isFunction(structure.$value) ) {
-      for ( let item in structure.$value(value, key) ) { queries[item] = '' }
-      value = structure.$value(value, key)
+    if ( _.isFunction(methods.$value) ) {
+      for ( let item in methods.$value(value, key) ) { queries[item] = '' }
+      payload = methods.$value(value, key)
     }
 
-    // set $keyName and $value methods by default value and key name of object
-    methods.$value = parse(structure.$value, value)
+
+    // set $keyName method by default value and key name of object
     methods.$keyName = parse(structure.$keyName, key)
 
     // Include
     // ================================================
 
     // include some methods with $include method
-    let include = $merge( methods.$value, methods.$include, key )
-    methods.$value = include
+    payload = $merge( payload, methods.$include, key )
 
     // add key names of data included to queries
     for ( let item in methods.$include(value, key) ) { queries[item] = '' }
 
-    // Igore
-    // ================================================
-
-    // ignore some methods with $ignore method
-    methods.$value = $ignore( methods.$value, methods.$ignore )
 
     // return value of item if [ queries ] is empty and $ignore method is not empty
-    if ( !_.isEmpty( methods.$ignore ) && _.keys(queries).length == 0 ) {
-      for ( let item in methods.$value ) { queries[item] = '' }
+    if ( _.keys(queries).length == 0 ) {
+      for ( let item in payload ) { queries[item] = '' }
     }
 
-    if ( !_.isObject( methods.$value ) ) { cb( methods.$value, methods.$keyName ); return }
+    if ( !_.isObject( payload ) ) {
+      cb( payload, methods.$keyName );
+      return
+    }
 
     // get data by queries
     $async( queries, ( query, key, done ) => {
       // get value of data from object
-      let context = methods.$value[ key ]
+      let context = payload[ key ]
       let hadMiddlewares = qreal.middlewares[key]
 
       function restructure( data ) {
@@ -221,7 +226,9 @@ function qreal ( data, structure, callBack = () => {}) {
 
           qreal(data, query, ( subObject ) => {
             // if data is string join and wrap it into array to resume process
-            if ( _.isString( data ) ) { subObject = [ subObject.join('') ] }
+            if ( _.isString( data ) ) {
+              subObject = [ subObject.join('') ]
+            }
 
             if ( !_.isArray( context ) && !_.isObject( context[0] ) ) { subObject = subObject[0] }
 
@@ -251,7 +258,12 @@ function qreal ( data, structure, callBack = () => {}) {
 
         qreal.middlewares.pass(key, context, value, query, ( context ) => {
           if ( _.keys( hadMiddlewares ).length !== 1 && !!hadMiddlewares ) {
-            qreal.middlewares = { ..._.omit(hadMiddlewares, 'middlewares'), pass : qreal.middlewares.pass }
+            qreal.middlewares = {
+              ..._.omit(hadMiddlewares, 'middlewares'),
+              pass : qreal.middlewares.pass,
+              // pass parent middleware to submiddlewares
+              [key] : { middlewares : hadMiddlewares.middlewares }
+            }
           }
           restructure( context[0] )
         })
@@ -261,8 +273,14 @@ function qreal ( data, structure, callBack = () => {}) {
       }
 
     }, ( value ) => {
+      let parse = $parse( value, methods.$keyName )
+      
+      // set $value method by default value and key name of object
+      value = parse(methods.$value, value)
+
       // push restructured item to result
       cb( value, methods.$keyName )
+
     }, ( methods.$keyName !== '@' ) ? {}:[] )
   }, callBack, ( methods.$keyName !== '@' ) ? {}:[] )
 
