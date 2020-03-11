@@ -1,6 +1,6 @@
 # Qreal: control your data 😎
 
-qreal is small function to restructure data ( Array Objects )
+qreal is small function to restructure data ( Array Objects ) and now you can use [qlink ]([https://www.npmjs.com/package/qlink-server](https://www.npmjs.com/package/qlink-server))to make resturcture data very easy 
 
 ## Installation
 
