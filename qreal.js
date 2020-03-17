@@ -1,5 +1,6 @@
 /* eslint-disable */
 const _ = require('lodash');
+const { fork } = require('child_process');
 
 // Utilities
 // =====================================
@@ -143,13 +144,15 @@ function qreal ( data, structure, callBack = () => {}) {
   }, structure)
 
   // resize data before restructure it
-  data = $take( data, methods.$take )
+  if ( structure.$take ) {
+    data = $take( data, methods.$take )
+  }
 
   // get queries ( query that doesn't name of it start with '$' ) from methods
   var queries = _.omitBy( methods, (_, key ) => key[0] === "$" )
 
   // restructure data
-  return $async(data, ( value, key, cb ) => {
+  return $async(data, ( value, key, push ) => {
     let parse = $parse( value, key )
     var payload = _.clone(value)
     // if $value is function select items what returned and set [ value ] value $value
@@ -158,40 +161,42 @@ function qreal ( data, structure, callBack = () => {}) {
       payload = methods.$value(value, key)
     }
 
-
-    // set $keyName method by default value and key name of object
-    methods.$keyName = parse(structure.$keyName, key)
+    if ( structure.$keyName ) {
+      // set $keyName method by default value and key name of object
+      methods.$keyName = parse(structure.$keyName, key)
+    } else {
+      methods.$keyName = key
+    }
 
     // Include
     // ================================================
 
-    // include some methods with $include method
-    payload = $merge( payload, methods.$include, key )
-
-    // add key names of data included to queries
-    for ( let item in methods.$include(value, key) ) { queries[item] = '' }
-
+    if ( structure.$include ) {
+      // include some methods with $include method
+      payload = $merge( payload, methods.$include, key )
+      // add key names of data included to queries
+      for ( let item in methods.$include(value, key) ) { queries[item] = '' }
+    }
 
     // Igore
     // ================================================
-    // ignore some methods with $ignore method
-    payload = $ignore( payload, methods.$ignore )
+    if ( structure.$ignore ) {
+      // ignore some methods with $ignore method
+      payload = $ignore( payload, methods.$ignore )
+    }
 
     // return value of item if [ queries ] is empty and $ignore method is not empty
     if ( _.keys(queries).length == 0 ) {
       for ( let item in payload ) { queries[item] = '' }
     }
 
-    if ( !_.isObject( payload ) ) {
-      cb( payload, methods.$keyName );
-      return
-    }
+    if ( !_.isObject( payload ) ) { push( payload, methods.$keyName ); return }
 
     // get data by queries
     $async( queries, ( query, key, done ) => {
       // get value of data from object
       let context = payload[ key ]
-      let hadMiddlewares = qreal.middlewares[key]
+      let hadMiddlewares = ( qreal.middlewares[key] && !$isFalsy(context) ) ? qreal.middlewares[key] : false
 
       function restructure( data ) {
 
@@ -277,7 +282,7 @@ function qreal ( data, structure, callBack = () => {}) {
       value = parse(methods.$value, value)
 
       // push restructured item to result
-      cb( value, methods.$keyName )
+      push( value, methods.$keyName )
 
     }, ( methods.$keyName !== '@' ) ? {}:[] )
   }, callBack, ( methods.$keyName !== '@' ) ? {}:[] )
