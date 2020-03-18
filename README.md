@@ -1,6 +1,6 @@
 # Qreal: control your data 😎
 
-qreal is small function to restructure data ( Array Objects ) and now you can use [qlink](https://www.npmjs.com/package/qlink-server) to make resturcture data very easy 
+qreal is small function to restructure data ( Array Objects ) and now you can use [qlink](https://www.npmjs.com/package/qlink-server) to make resturcture data very easy
 
 ## Installation
 
@@ -16,15 +16,19 @@ or you can use [yarn](https://yarnpkg.com/) to install it
 yarn add qreal
 ```
 
-you can use qreal in browser by add url of [unpkg](https://unpkg.com) in ```<script>``` tag
+you can use qreal in browser by add url of [unpkg](https://unpkg.com) in ```<script>``` tag,
+but you must import lodash.
 
 ```html
+<script src="https://cdn.jsdelivr.net/npm/lodash@<version>/lodash.min.js"></script>
 <script src='https://unpkg.com/qreal'></script>
 ```
 
 ## Usage
 
 restructure data by write the name of the property.
+
+> Info : qreal return promise
 
 ```javascript
 const qreal = require('qreal')
@@ -332,7 +336,7 @@ qreal(books, {
          title: ''
      }
  }
-}, ( result ) => {
+}).then( result ) => {
  console.log( result )
 })
 // Result

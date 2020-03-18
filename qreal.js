@@ -30,7 +30,7 @@ _.$isFalsy = (data) => {
 
 const $fillEnd = (arr, chr=' ', length) => _.reverse( _.$fillStart(arr, chr, length) )
 
-const $castFunction = (data) => _.isFunction(data) ? data:() => data
+const $castFunction = (data) => typeof data == 'function' ? data:() => data
 
 const $merge = (value, include, key) => {
   include = $castFunction(include)(value || {}, key || 0)
@@ -59,14 +59,16 @@ const $parse = _.curry( (value, key, method, def) => {
 
   // if value of method is string , use method as a query to get value
   if ( _.$isString( $method ) ) {
-    $method = _.get(value, _.trimStart($method, '@'), null)
+    if ( $method[0] !== '@' ) { $method = null } else {
+      $method = _.get(value, _.trimStart($method, '@'), null)
+    }
     if ( _.$isFalsy( $method ) ) { $method = def }
   } else {
     $method = def
   }
 
   return $method
-} )
+})
 
 const $ignore = ( object, items ) => {
   // if [ object ] is array remove all items by value of it
@@ -108,7 +110,7 @@ _.$async = ( object, middleware, result = [] ) => {
 
 function qreal ( data, structure ) {
   // cast data if it does not array
-  data = ( !_.isString(data) ) ? _.castArray(data) : data
+  if ( typeof data !== 'string' ) data = _.castArray(data)
 
   if ( data.length === 0 ) {
     return new Promise( res => res([]) )
@@ -136,7 +138,7 @@ function qreal ( data, structure ) {
     let parse = $parse( value, key )
     var payload = _.clone(value)
     // if $value is function select items what returned and set [ value ] value $value
-    if ( _.isFunction(methods.$value) ) {
+    if ( typeof methods.$value === 'function' ) {
       for ( let item in methods.$value(value, key) ) { queries[item] = '' }
       payload = methods.$value(value, key)
     }
