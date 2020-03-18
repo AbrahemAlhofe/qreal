@@ -1,27 +1,34 @@
-/* eslint-disable */
-const _ = require('lodash');
-const { fork } = require('child_process');
+// if we are in node js enviroment require lodash
+var _;
+if ( typeof module === "object" ) {
+  _ = require('lodash')
+} else {
+  // if user not require lodash warning him
+  if ( typeof _ === 'undefined' ) {
+    console.log( new Error('Qreal [WARN] : You should import lodash library') )
+  }
+}
 
 // Utilities
 // =====================================
-const $warn = (msg) => { console.log( new Error(`Qreal [WARN] : ${msg}`) ) }
+_.$warn = (msg) => { console.log( new Error(`Qreal [WARN] : ${msg}`) ) }
 
-const $isString = ( str ) => _.isString(str) && str !== ''
+_.$isString = ( str ) => _.isString(str) && str !== ''
 
-const $fillStart = (arr, chr=' ', length) => {
+_.$fillStart = (arr, chr=' ', length) => {
   // make array fill with < chr >
   const placeholder = _.fill( Array( length - arr.length ) , chr)
   // merge array and placeholder to make length of it what user pass
   return [ ...placeholder, ...arr ]
 }
 
-const $isFalsy = (data) => {
+_.$isFalsy = (data) => {
   if ( !!data ) return false
   if ( !_.isNumber( data ) ) return true
   return false
 }
 
-const $fillEnd = (arr, chr=' ', length) => _.reverse( $fillStart(arr, chr, length) )
+const $fillEnd = (arr, chr=' ', length) => _.reverse( _.$fillStart(arr, chr, length) )
 
 const $castFunction = (data) => _.isFunction(data) ? data:() => data
 
@@ -51,9 +58,9 @@ const $parse = _.curry( (value, key, method, def) => {
   let $method = $castFunction( method )(value, key)
 
   // if value of method is string , use method as a query to get value
-  if ( $isString( $method ) ) {
+  if ( _.$isString( $method ) ) {
     $method = _.get(value, _.trimStart($method, '@'), null)
-    if ( $isFalsy( $method ) ) { $method = def }
+    if ( _.$isFalsy( $method ) ) { $method = def }
   } else {
     $method = def
   }
@@ -74,7 +81,7 @@ const $take = ( data, argument ) => {
   let take = _.take( _.castArray(argument), 2)
 
   // placeholding [ take ]
-  let [from, to] = $fillStart(take, 0, 2)
+  let [from, to] = _.$fillStart(take, 0, 2)
 
   // if [ form ] attribute object get index of it if not keep it
   from = ( _.findIndex(data, from) !== -1 ) ? _.findIndex(data, from) : from
@@ -87,51 +94,24 @@ const $take = ( data, argument ) => {
   return slice
 }
 
-const $async = ( object, middleware, callBack, result = [] ) => {
-  // index of ping pong loop
-  var index = 0
-
-  // get keys of object
-  let keys = Object.keys( object )
-
-  // ping : get data from middleware function and add it to result
-  function ping() {
-    // get key in index n
-    let key = keys[index]
-    // get items by key
-    let item = object[ key ]
-
-    // pass item and key of it and done function to middleware
-    middleware( item, key, (data, keyName) => {
-      // increment index to get next key
-      index += 1
-      // add data to result with keyName was passed or key
-      result[ keyName || key ] = data
-      // call check function
-      pong()
-    })
-
-  }
-
-  // pong : check if done call callBack function else re-call ping
-  function pong() {
-    if ( index > keys.length - 1 ) { callBack( result ) } else { ping() }
-  }
-
-  // start loop function
-  ping()
-
-  // return result if data is sync
-  return result
+_.$async = ( object, middleware, result = [] ) => {
+  return new Promise(async (resolve, reject) => {
+    for ( let index in object ) {
+      let item = object[index]
+      const [context, keyName = index] = await new Promise(done => middleware(item, index, done))
+      // push context to result
+      result[keyName] = context
+    }
+    resolve( result )
+  })
 }
 
-function qreal ( data, structure, callBack = () => {}) {
+function qreal ( data, structure ) {
   // cast data if it does not array
   data = ( !_.isString(data) ) ? _.castArray(data) : data
 
   if ( data.length === 0 ) {
-    callBack([])
-    return []
+    return new Promise( res => res([]) )
   }
 
   // assign value of methods in structure to default methods
@@ -152,7 +132,7 @@ function qreal ( data, structure, callBack = () => {}) {
   var queries = _.omitBy( methods, (_, key ) => key[0] === "$" )
 
   // restructure data
-  return $async(data, ( value, key, push ) => {
+  return _.$async(data, ( value, key, push ) => {
     let parse = $parse( value, key )
     var payload = _.clone(value)
     // if $value is function select items what returned and set [ value ] value $value
@@ -190,22 +170,22 @@ function qreal ( data, structure, callBack = () => {}) {
       for ( let item in payload ) { queries[item] = '' }
     }
 
-    if ( !_.isObject( payload ) ) { push( payload, methods.$keyName ); return }
+    if ( !_.isObject( payload ) ) { push([ payload, methods.$keyName ]); return }
 
     // get data by queries
-    $async( queries, ( query, key, done ) => {
+    _.$async( queries, ( query, key, done ) => {
       // get value of data from object
       let context = payload[ key ]
-      let hadMiddlewares = ( qreal.middlewares[key] && !$isFalsy(context) ) ? qreal.middlewares[key] : false
+      let hadMiddlewares = ( qreal.middlewares[key] && !_.$isFalsy(context) ) ? qreal.middlewares[key] : false
 
       function restructure( data ) {
 
         if ( !_.isObject( query ) || _.isArray( query ) ) {
-          if ( $isString(query) ) {
+          if ( _.$isString(query) ) {
             let parse = $parse( context, key )
             data = parse(query, data)
           }
-          done( data );
+          done([ data ]);
           return
         }
 
@@ -215,10 +195,10 @@ function qreal ( data, structure, callBack = () => {}) {
         */
 
         if ( hadMiddlewares ) {
-          qreal(data, query, ( subObject ) => {
+          qreal(data, query).then(( subObject ) => {
             subObject = ( _.isArray( data ) ) ? _.toArray( subObject ) : subObject[0]
             // parse data then put it in value
-            done( subObject )
+            done([ subObject ])
           })
         } else {
           // if data is not array of objects put it into array to not make deep restructure
@@ -227,7 +207,7 @@ function qreal ( data, structure, callBack = () => {}) {
              data = [ data ]
            }
 
-          qreal(data, query, ( subObject ) => {
+          qreal(data, query).then(( subObject ) => {
             // if data is string join and wrap it into array to resume process
             if ( _.isString( data ) ) {
               subObject = [ subObject.join('') ]
@@ -243,7 +223,7 @@ function qreal ( data, structure, callBack = () => {}) {
             }
 
             // parse data then put it in value
-            done( subObject )
+            done([ subObject ])
           })
         }
 
@@ -259,7 +239,9 @@ function qreal ( data, structure, callBack = () => {}) {
           return
         }
 
-        qreal.middlewares.pass(key, context, { ...value, ...methods.$include(value, methods.$keyName) }, query, ( context ) => {
+        const pass = qreal.middlewares.pass(key, context, { ...value, ...methods.$include(value, methods.$keyName) }, query)
+
+        pass.then(( context ) => {
           if ( _.keys( hadMiddlewares ).length !== 1 && !!hadMiddlewares ) {
             qreal.middlewares = {
               ..._.omit(hadMiddlewares, 'middlewares'),
@@ -275,17 +257,17 @@ function qreal ( data, structure, callBack = () => {}) {
         restructure( $castFunction(context)( query ) )
       }
 
-    }, ( value ) => {
+    }, ( methods.$keyName !== '@' ) ? {}:[] ).then(( value ) => {
       let parse = $parse( value, methods.$keyName )
 
       // set $value method by default value and key name of object
       value = parse(methods.$value, value)
 
       // push restructured item to result
-      push( value, methods.$keyName )
+      push([ value, methods.$keyName ])
 
-    }, ( methods.$keyName !== '@' ) ? {}:[] )
-  }, callBack, ( methods.$keyName !== '@' ) ? {}:[] )
+    })
+  }, ( methods.$keyName !== '@' ) ? {}:[] )
 
 }
 
@@ -296,19 +278,19 @@ qreal.middlewares = {}
 qreal.use = function ( key, middleware ) {
   // pass data to all middlewares of data as a waterflow
 
-  qreal.middlewares.pass = function (key, data, parentObject, query, callBack) {
-    $async( qreal.middlewares[key].middlewares , ( middleware, index, done ) => {
+  qreal.middlewares.pass = function (key, data, parentObject, query) {
+    return _.$async( qreal.middlewares[key].middlewares , ( middleware, index, done ) => {
 
-      $async( _.castArray( data ), ( item, index, done ) => {
+      _.$async( _.castArray( data ), ( item, index, done ) => {
         middleware( item, parentObject, function ( value ) {
-          done( value )
+          done([ value ])
         }, query)
-      }, (value) => {
+      }).then((value) => {
         if ( !_.isArray( data ) ) { value = value[0] }
-        done( value )
+        done([ value ])
       })
 
-    }, callBack)
+    })
   };
 
   // if data had an space in middlwares push new middleware to it
@@ -322,4 +304,6 @@ qreal.use = function ( key, middleware ) {
   _.set(qreal.middlewares, `${key}.middlewares`, [ middleware ] )
 }
 
-module.exports = qreal
+if ( typeof module === 'object' ) {
+  module.exports = qreal
+}
