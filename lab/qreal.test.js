@@ -415,6 +415,8 @@ test('get name and age of author of each book he had with ( Promise ) two items'
     }
   }, 2)
 
+  qreal.middlewares = {}
+
   qreal.use('author', ( id, object, done ) => {
     setTimeout(() => {
       if ( id === 0 ) {

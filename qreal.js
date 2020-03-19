@@ -289,15 +289,16 @@ qreal.use = function ( key, middleware ) {
         }, query)
       }).then((value) => {
         if ( !_.isArray( data ) ) { value = value[0] }
+        data = value
         done([ value ])
       })
 
-    })
+    }).then(result => [ data ])
   };
 
   // if data had an space in middlwares push new middleware to it
   if ( typeof qreal.middlewares[key] !== "undefined" ) {
-    if  ( qreal.middlewares[key].middlwares ) {
+    if  ( qreal.middlewares[key].middlewares ) {
       qreal.middlewares[key].middlewares.push(middleware)
       return
     }
