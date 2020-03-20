@@ -1,23 +1,37 @@
-const data = new Array(10 ** 2).fill({
-  title : 'lorem ipsum dollar',
-  likes : 23,
-  author : {
-    name : 'Abrahem alhofe',
-    age : 14
+const data = [
+  {
+      name : 'jack',
+      age : 13,
+      address : {
+          first : 'london',
+          second : 'bridge'
+      },
   },
-  id : 123123
-})
+  {
+      name : 'john',
+      age : 23,
+      address : {
+          first : 'berlin',
+          second : 'germane'
+      }
+  }
+]
 
-qreal.use('likes', (likes, object, done) => {
-  done(1)
-})
+const query = {
+  "address : newAddress" : {
+    first : ''
+  },
+  "address : @first" : {
+    second : ''
+  }
+}
 
 async function run() {
   // Start time
   var start = new Date().getTime();
 
   // Restructure data
-  const val = await qreal(data, { title : '', likes : '', author : { name : ''} })
+  const val = await qreal(data, query)
   console.log( val )
 
   // End time

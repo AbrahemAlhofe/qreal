@@ -176,6 +176,10 @@ function qreal ( data, structure ) {
 
     // get data by queries
     _.$async( queries, ( query, key, done ) => {
+      let keyName = key.split(':').map(k => k.trim())
+      key = keyName[0]
+      let alias = $parse( payload[ key ], key )(keyName[ keyName.length - 1 ], keyName[ keyName.length - 1 ])
+
       // get value of data from object
       let context = payload[ key ]
       let hadMiddlewares = ( qreal.middlewares[key] && !_.$isFalsy(context) ) ? qreal.middlewares[key] : false
@@ -187,7 +191,7 @@ function qreal ( data, structure ) {
             let parse = $parse( context, key )
             data = parse(query, data)
           }
-          done([ data ]);
+          done([ data, alias ]);
           return
         }
 
@@ -200,7 +204,7 @@ function qreal ( data, structure ) {
           qreal(data, query).then(( subObject ) => {
             subObject = ( _.isArray( data ) ) ? _.toArray( subObject ) : subObject[0]
             // parse data then put it in value
-            done([ subObject ])
+            done([ subObject, alias ])
           })
         } else {
           // if data is not array of objects put it into array to not make deep restructure
@@ -225,7 +229,7 @@ function qreal ( data, structure ) {
             }
 
             // parse data then put it in value
-            done([ subObject ])
+            done([ subObject, alias ])
           })
         }
 

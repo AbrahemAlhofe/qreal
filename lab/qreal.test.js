@@ -268,7 +268,7 @@ test('include data to items', () => {
 
 })
 
-test('change key name of items', () => {
+test('change key name of items by $keyName method', () => {
   expect.assertions(1);
 
   const expected = {
@@ -281,6 +281,44 @@ test('change key name of items', () => {
   return qreal(BookSchema, {
     $keyName : () => '@title',
     publisher : '',
+    author : ''
+  }).then(result => {
+    expect(result).toEqual( expected )
+  })
+
+})
+
+test('change key name of sub items by alias ( normal )', () => {
+  expect.assertions(1);
+
+  const expected = [
+     {
+      "my Publisher" : BookSchema.publisher,
+      author : BookSchema.author
+    }
+  ]
+
+  return qreal(BookSchema, {
+    "publisher : my Publisher" : '',
+    author : ''
+  }).then(result => {
+    expect(result).toEqual( expected )
+  })
+
+})
+
+test('change key name of sub items by alias ( from item )', () => {
+  expect.assertions(1);
+
+  const expected = [
+     {
+      [BookSchema.publisher.name] : BookSchema.publisher,
+      author : BookSchema.author
+    }
+  ]
+
+  return qreal(BookSchema, {
+    "publisher : @name" : '',
     author : ''
   }).then(result => {
     expect(result).toEqual( expected )

@@ -51,10 +51,10 @@ var data = [
    },
    {
        name : 'john',
-       age : 23
+       age : 23,
        address : {
            first : 'berlin',
-           second : 'german'
+           second : 'germane'
        }
    }
 ]
@@ -209,6 +209,45 @@ qreal(OBJECTS, {
     age : 23,
  },
 }
+```
+
+### Aliases
+
+HOW TO USE : "[name of item] : [alias]"
+
+$keyName is not working with sub items 😥 but you can use aliases 😃
+
+> name must 🤬 start with '@' if you select name from object
+
+```javascript
+qreal(OBJECTS, {
+     "address : newAddress" : {
+       first : ''
+     },
+     "address : @first" : {
+       second : ''
+     }
+})
+
+// Result
+[
+  {
+    newAddress: {
+      first: "london"
+    },
+    london: {
+      second: "bridge"
+    }
+  },
+  {
+    newAddress: {
+      first: "berlin"
+    },
+    berlin: {
+      second: "germane"
+    }
+  }
+]
 ```
 
 ### $value
