@@ -2,3 +2,5 @@ node_modules
 presention
 rollup.config.js
 lab
+webpack.config.js
+yarn.lock

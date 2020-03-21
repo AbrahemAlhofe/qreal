@@ -16,12 +16,10 @@ or you can use [yarn](https://yarnpkg.com/) to install it
 yarn add qreal
 ```
 
-you can use qreal in browser by add url of [unpkg](https://unpkg.com) in ```<script>``` tag,
-but you must import lodash.
+you can use qreal in browser by add url of [unpkg](https://unpkg.com) in ```<script>```
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/lodash@<version>/lodash.min.js"></script>
-<script src='https://unpkg.com/qreal'></script>
+<script src='https://unpkg.com/qreal.web.js'></script>
 ```
 
 ## Usage
