@@ -346,6 +346,31 @@ test('change key name of sub items by alias ( from item )', () => {
 
 })
 
+test('change key name of sub items by alias ( from item ) with middleware', () => {
+  expect.assertions(1);
+
+  qreal.use('author', (uid, book, done) => {
+    done(AuthorSchema)
+  })
+
+  const expected = [
+     {
+      [AuthorSchema.name] : {
+        age : AuthorSchema.age
+      }
+    }
+  ]
+
+  return qreal(BookSchema, {
+    "author : @name" : {
+      age : ''
+    }
+  }).then(result => {
+    expect(result).toEqual( expected )
+  })
+
+})
+
 test('change value of items by Function', () => {
   expect.assertions(1);
 
@@ -420,6 +445,8 @@ test('change value of [ books ] of Author by String ( shorthand )', () => {
 
 test('get name and age of author of each book', () => {
   expect.assertions(1);
+
+  qreal.middlewares = {}
 
   qreal.use('author', ( id, object, done ) => {
     if ( id === 0 ) {

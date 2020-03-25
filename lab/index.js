@@ -1,28 +1,15 @@
-const data = [
-  {
-      name : 'jack',
-      age : 13,
-      address : {
-          first : 'london',
-          second : 'bridge'
-      },
-  },
-  {
-      name : 'john',
-      age : 23,
-      address : {
-          first : 'berlin',
-          second : 'germane'
-      }
-  }
-]
+const data = new Array(1000).fill({
+    name : 'jack',
+    age : 13,
+    address : {
+        first : 'london',
+        second : 'bridge'
+    },
+})
 
 const query = {
   "address : newAddress" : {
     first : ''
-  },
-  "address : @first" : {
-    second : ''
   }
 }
 

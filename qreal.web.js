@@ -17305,14 +17305,12 @@ function qreal ( data, structure ) {
     $async( queries, ( query, key, done ) => {
       let keyName = key.split(':').map(k => k.trim())
       key = keyName[0]
-      let alias = $parse( payload[ key ], key )(keyName[ keyName.length - 1 ], keyName[ keyName.length - 1 ])
-
-      // get value of data from object
       let context = payload[ key ]
+      let alias = $parse( context, key )(keyName[ keyName.length - 1 ], keyName[ keyName.length - 1 ])
+      // get value of data from object
       let hadMiddlewares = ( qreal.middlewares[key] && !_.$isFalsy(context) ) ? qreal.middlewares[key] : false
 
       function restructure( data ) {
-
         if ( !_.isObject( query ) || _.isArray( query ) ) {
           if ( _.$isString(query) ) {
             let parse = $parse( context, key )
@@ -17330,6 +17328,8 @@ function qreal ( data, structure ) {
         if ( hadMiddlewares ) {
           qreal(data, query).then(( subObject ) => {
             subObject = ( _.isArray( data ) ) ? _.toArray( subObject ) : subObject[0]
+            alias = $parse( data, key )(keyName[ keyName.length - 1 ], keyName[ keyName.length - 1 ])
+
             // parse data then put it in value
             done( subObject, alias )
           })
@@ -17394,7 +17394,7 @@ function qreal ( data, structure ) {
       let parse = $parse( value, methods.$keyName )
 
       // set $value method by default value and key name of object
-      value = parse(methods.$value, value)
+      value = parse(methods.$value, ( typeof methods.$value !== 'function' && _.trimStart(methods.$value, '@') !== '' ) ? methods.$value : value)
 
       // push restructured item to result
       push( value, methods.$keyName )
