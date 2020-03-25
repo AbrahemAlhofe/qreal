@@ -5,8 +5,7 @@
   "main": "qreal.js",
   "scripts": {
     "test": "jest lab/qreal.test.js",
-    "dev": "webpack --mode='development' --watch",
-    "build": "webpack --mode='production'"
+    "build": "browserify qreal.js -o qreal.web.js"
   },
   "repository": "https://github.com/AbrahemAlhofe/qrealjs.git",
   "bugs": "https://github.com/AbrahemAlhofe/qrealjs/issues",
@@ -24,8 +23,6 @@
     "lodash": "^4.17.15"
   },
   "devDependencies": {
-    "jest": "^25.1.0",
-    "webpack": "^4.42.0",
-    "webpack-cli": "^3.3.11"
+    "jest": "^25.1.0"
   }
 }
