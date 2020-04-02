@@ -62,20 +62,6 @@ test('pass empty array to qreal', () => {
 
 })
 
-test('pass empty array to qreal ( callBack )', () => {
-  expect.assertions(1);
-
-  const expected = []
-
-  return qreal([], {
-    title : "",
-    description : ""
-  }).then(( result ) => {
-    expect(result).toEqual( expected )
-  })
-
-})
-
 test('restructure data by select items', () => {
   expect.assertions(1);
 
@@ -346,11 +332,17 @@ test('change key name of sub items by alias ( from item )', () => {
 
 })
 
-test('change key name of sub items by alias ( from item ) with middleware', () => {
+test('change key name of sub items by alias ( from item ) with two middlewares', () => {
   expect.assertions(1);
 
   qreal.use('author', (uid, book, done) => {
-    done(AuthorSchema)
+    done(uid + 1)
+  })
+
+  qreal.use('author', (uid, book, done) => {
+    if ( uid === 1 ) {
+      done(AuthorSchema)
+    }
   })
 
   const expected = [

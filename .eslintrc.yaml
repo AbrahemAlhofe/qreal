@@ -1,0 +1,6 @@
+parser : '@typescript-eslint/parser'
+plugins :
+  - '@typescript-eslint/recommeded'
+parserOptions :
+  ecmaVersion : 2018
+  sourceType: 'module'

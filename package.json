@@ -1,16 +1,18 @@
 {
   "name": "qreal",
-  "version": "4.2.1",
+  "version": "4.3.0",
   "description": "a small package to restructure data",
   "main": "qreal.js",
   "scripts": {
     "test": "jest lab/qreal.test.js",
-    "build": "browserify qreal.js -o qreal.web.js"
+    "build": "browserify qreal.js -o qreal.web.js",
+    "start": "tsc -p . -w"
   },
   "repository": "https://github.com/AbrahemAlhofe/qrealjs.git",
   "bugs": "https://github.com/AbrahemAlhofe/qrealjs/issues",
   "author": "abrahem ali alhofe <alhofeabrahem88@gmail.com>",
   "license": "MIT",
+  "types": "qreal.d.ts",
   "keywords": [
     "qreal",
     "restructure",
@@ -19,10 +21,12 @@
   ],
   "private": false,
   "dependencies": {
+    "@types/node": "^12.12.31",
     "asynkron": "^1.0.0",
     "lodash": "^4.17.15"
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.149",
     "jest": "^25.1.0"
   }
 }
