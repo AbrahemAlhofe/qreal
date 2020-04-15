@@ -1,32 +1,4 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-function asynkron ( object, middleware, result = [] ) {
-  // return promise if we need to make it await
-  return new Promise(async (resolve, reject) => {
-    for ( let index in object ) {
-      // get item from object with index
-      let item = object[index]
-
-      // await middleware and pass item and index and done function
-      const [context, keyName = index] = await new Promise(done => middleware(item, index, function (item, index) {
-        // pass item and index what passed to done function to resolve promise
-        done([ item, index ])
-      }))
-
-      // if context and keyName equal false break for loop
-      if ( !context && !keyName ) { break }
-
-      // push context to result
-      result[keyName] = context
-    }
-
-    // call callBack function
-    resolve( result )
-  })
-}
-
-module.exports = asynkron
-
-},{}],2:[function(require,module,exports){
 (function (global){
 /**
  * @license
@@ -17142,305 +17114,396 @@ module.exports = asynkron
 }.call(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],3:[function(require,module,exports){
-(function (global){
+},{}],2:[function(require,module,exports){
+"use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
 // if we are in node js enviroment require lodash
-const $async = require('asynkron')
-const _ = require('lodash')
-
-// Utilities
-// =====================================
-_.$warn = (msg) => { console.log( new Error(`Qreal [WARN] : ${msg}`) ) }
-
-_.$isString = ( str ) => _.isString(str) && str !== ''
-
-_.$fillStart = (arr, chr=' ', length) => {
-  // make array fill with < chr >
-  const placeholder = _.fill( Array( length - arr.length ) , chr)
-  // merge array and placeholder to make length of it what user pass
-  return [ ...placeholder, ...arr ]
-}
-
-_.$isFalsy = (data) => {
-  if ( !!data ) return false
-  if ( !_.isNumber( data ) ) return true
-  return false
-}
-
-const $fillEnd = (arr, chr=' ', length) => _.reverse( _.$fillStart(arr, chr, length) )
-
-const $castFunction = (data) => typeof data == 'function' ? data:() => data
-
-const $merge = (value, include, key) => {
-  include = $castFunction(include)(value || {}, key || 0)
-
-  // WARN : if include returned undefined data
-  if ( !include ) { $warn(`$include return "${ include }"`) }
-
-  if ( _.isString( value ) ) {
-
-    if ( _.isArray(include) ) { include = include.join('') }
-    if ( _.isEmpty(include) ) { include = '' }
-
-    value = value + _.toString( include )
-
-  }
-
-  if ( _.isObject( value ) ) {
-    value = _.merge( value, include )
-  }
-
-  return value
-}
-
-const $parse = _.curry( (value, key, method, def) => {
-  let $method = $castFunction( method )(value, key)
-
-  // if value of method is string , use method as a query to get value
-  if ( _.$isString( $method ) ) {
-    if ( $method[0] !== '@' ) { $method = null } else {
-      $method = _.get(value, _.trimStart($method, '@'), null)
+var lodash_1 = __importDefault(require("lodash"));
+var utils_1 = __importDefault(require("./utils"));
+var Qreal = /** @class */ (function () {
+    function Qreal() {
+        this.middlewares = {};
     }
-    if ( _.$isFalsy( $method ) ) { $method = def }
-  } else {
-    $method = def
-  }
-
-  return $method
-})
-
-const $ignore = ( object, items ) => {
-  // if [ object ] is array remove all items by value of it
-  if ( _.isArray(object) ) { return _.pullAll(object, items) }
-  // if [ object ] is object remove all items by keyNames of items
-  if ( _.isObject(object)  ) { return _.omit(object, items) }
-  return object
-}
-
-const $take = ( data, argument ) => {
-  // take only first two itmes in take argument
-  let take = _.take( _.castArray(argument), 2)
-
-  // placeholding [ take ]
-  let [from, to] = _.$fillStart(take, 0, 2)
-
-  // if [ form ] attribute object get index of it if not keep it
-  from = ( _.findIndex(data, from) !== -1 ) ? _.findIndex(data, from) : from
-
-  // convert [ to ] attribute to index syntax to make it work with slice
-  to = from + to + take.length - 1
-
-  let slice = _.slice(data, from, to)
-
-  return slice
-}
-
-function qreal ( data, structure ) {
-  // cast data if it does not array
-  if ( typeof data !== 'string' ) data = _.castArray(data)
-
-  if ( data.length === 0 ) {
-    return new Promise( res => res([]) )
-  }
-
-  // assign value of methods in structure to default methods
-  const methods = _.assign({
-    $take : data.length,
-    $ignore : [],
-    $include : () => ({}),
-    $keyName : '@',
-    $value : '@'
-  }, structure)
-
-  // resize data before restructure it
-  if ( structure.$take ) {
-    data = $take( data, methods.$take )
-  }
-
-  // get queries ( query that doesn't name of it start with '$' ) from methods
-  var queries = _.omitBy( methods, (_, key ) => key[0] === "$" )
-
-  // restructure data
-  return $async(data, ( value, key, push ) => {
-    let parse = $parse( value, key )
-    var payload = _.clone(value)
-    // if $value is function select items what returned and set [ value ] value $value
-    if ( typeof methods.$value === 'function' ) {
-      for ( let item in methods.$value(value, key) ) { queries[item] = '' }
-      payload = methods.$value(value, key)
-    }
-
-    if ( structure.$keyName ) {
-      // set $keyName method by default value and key name of object
-      methods.$keyName = parse(structure.$keyName, _.trimStart(structure.$keyName, '@') || key )
-    } else {
-      methods.$keyName = key
-    }
-
-    // Include
-    // ================================================
-
-    if ( structure.$include ) {
-      // include some methods with $include method
-      payload = $merge( payload, methods.$include, key )
-      // add key names of data included to queries
-      for ( let item in methods.$include(value, key) ) { queries[item] = '' }
-    }
-
-    // Igore
-    // ================================================
-    if ( structure.$ignore ) {
-      // ignore some methods with $ignore method
-      payload = $ignore( payload, methods.$ignore )
-    }
-
-    // return value of item if [ queries ] is empty and $ignore method is not empty
-    if ( _.keys(queries).length == 0 ) {
-      for ( let item in payload ) { queries[item] = '' }
-    }
-
-    if ( !_.isObject( payload ) ) { push( payload, methods.$keyName ); return }
-
-    // get data by queries
-    $async( queries, ( query, key, done ) => {
-      let keyName = key.split(':').map(k => k.trim())
-      key = keyName[0]
-      let context = payload[ key ]
-      let alias = $parse( context, key )(keyName[ keyName.length - 1 ], keyName[ keyName.length - 1 ])
-      // get value of data from object
-      let hadMiddlewares = ( qreal.middlewares[key] && !_.$isFalsy(context) ) ? qreal.middlewares[key] : false
-
-      function restructure( data ) {
-        if ( !_.isObject( query ) || _.isArray( query ) ) {
-          if ( _.$isString(query) ) {
-            let parse = $parse( context, key )
-            data = parse(query, data)
-          }
-          done( data, alias );
-          return
+    Qreal.prototype.pass = function (key, data, parentObject, query) {
+        return utils_1.default.async(lodash_1.default.get(this.middlewares, key).middlewares, function (middleware, _index, done) {
+            utils_1.default.async(lodash_1.default.castArray(data), function (item, index, done) {
+                middleware(item, parentObject, function (value) {
+                    done(value);
+                }, query);
+            }).then(function (value) {
+                if (!lodash_1.default.isArray(data)) {
+                    value = value[0];
+                }
+                // change data to pass it to the next middleware
+                data = value;
+                done(value);
+            });
+        }).then(function () { return [data]; });
+    };
+    Qreal.prototype.use = function (key, middleware) {
+        // if data had an space in middlwares push new middleware to it
+        if (lodash_1.default.has(this.middlewares, key + ".middlewares")) {
+            lodash_1.default.get(this.middlewares, key).middlewares.push(middleware);
         }
-
-        /*
-          restructure query object,
-          and wrap it to make qreal not make deep restructure again
-        */
-
-        if ( hadMiddlewares ) {
-          qreal(data, query).then(( subObject ) => {
-            subObject = ( _.isArray( data ) ) ? _.toArray( subObject ) : subObject[0]
-            alias = $parse( data, key )(keyName[ keyName.length - 1 ], keyName[ keyName.length - 1 ])
-
-            // parse data then put it in value
-            done( subObject, alias )
-          })
-        } else {
-          // if data is not array of objects put it into array to not make deep restructure
-          if ( _.isArray( data ) && !_.isObject( data[0] ) ) {
-             if ( query.$value ) { $warn(`use shorthand of $value method in ${key} query`) }
-             data = [ data ]
-           }
-
-          qreal(data, query).then(( subObject ) => {
-            // if data is string join and wrap it into array to resume process
-            if ( _.isString( data ) ) {
-              subObject = [ subObject.join('') ]
-            }
-
-            if ( !_.isArray( context ) && !_.isObject( context[0] ) ) { subObject = subObject[0] }
-
-            if ( _.isArray( context ) && !_.isObject( context[0] ) ) {
-              let array = _.toArray( subObject[0] )
-              if ( array.length !== 0 ) {
-                subObject = array
-              }
-            }
-
-            // parse data then put it in value
-            done( subObject, alias )
-          })
+        else {
+            // create space in middleware for data
+            lodash_1.default.set(this.middlewares, key + ".middlewares", [middleware]);
         }
-
-      }
-
-      // if query key had an middlewares run it
-      if ( hadMiddlewares ) {
-
-        // query had sub middleware and don't had middlewares
-        if ( !hadMiddlewares.middlewares ) {
-          qreal.middlewares = { ..._.omit(hadMiddlewares, 'middlewares'), pass : qreal.middlewares.pass }
-          restructure( context )
-          return
+    };
+    Qreal.prototype.run = function (data, structure) {
+        var _this = this;
+        // cast data if it does not array
+        if (typeof data !== 'string')
+            data = lodash_1.default.castArray(data);
+        if (data.length === 0) {
+            return new Promise(function (res) { return res([]); });
         }
-
-        const pass = qreal.middlewares.pass(key, context, { ...value, ...methods.$include(value, methods.$keyName) }, query)
-
-        pass.then(( context ) => {
-          if ( _.keys( hadMiddlewares ).length !== 1 && !!hadMiddlewares ) {
-            qreal.middlewares = {
-              ..._.omit(hadMiddlewares, 'middlewares'),
-              pass : qreal.middlewares.pass,
-              // pass parent middleware to submiddlewares
-              [key] : { middlewares : hadMiddlewares.middlewares }
+        // assign value of methods in structure to default methods
+        var methods = lodash_1.default.assign({
+            $take: data.length,
+            $ignore: [],
+            $include: function () { return ({}); },
+            $keyName: '@',
+            $value: '@'
+        }, structure);
+        // resize data before restructure it
+        if (structure.$take) {
+            data = utils_1.default.take(data, methods.$take);
+        }
+        // get queries ( query that doesn't name of it start with '$' ) from methods
+        var queries = lodash_1.default.omitBy(methods, function (_, keyName) { return keyName[0] === "$"; });
+        // restructure data
+        return utils_1.default.async(data, function (value, key, push) {
+            var parse = utils_1.default.parse(value, key);
+            var payload = lodash_1.default.clone(value);
+            // if $value is function select items what returned and set [ value ] value $value
+            if (typeof methods.$value === 'function') {
+                for (var item in methods.$value(value, key)) {
+                    queries[item] = '';
+                }
+                payload = methods.$value(value, key);
             }
-          }
-          restructure( context[0] )
-        })
+            if (structure.$keyName) {
+                // set $keyName method by default value and key name of object
+                key = parse(methods.$keyName, lodash_1.default.trimStart(methods.$keyName, '@') || key);
+            }
+            // Include
+            // ================================================
+            if (structure.$include) {
+                // include some methods with $include method
+                payload = utils_1.default.merge(payload, methods.$include, key);
+                // add key names of data included to queries
+                for (var item in methods.$include(value, key)) {
+                    queries[item] = '';
+                }
+            }
+            // Igore
+            // ================================================
+            if (structure.$ignore) {
+                // ignore some methods with $ignore method
+                payload = utils_1.default.ignore(payload, methods.$ignore);
+            }
+            // return value of item if [ queries ] is empty and $ignore method is not empty
+            if (lodash_1.default.keys(queries).length == 0) {
+                for (var item in payload) {
+                    queries[item] = '';
+                }
+            }
+            if (!lodash_1.default.isObject(payload)) {
+                push(payload, key);
+                return;
+            }
+            // get data by queries
+            utils_1.default.async(queries, function (query, key, done) {
+                var keyName = key.split(':').map(function (k) { return k.trim(); });
+                key = keyName[0];
+                var context = payload[key];
+                var alias = utils_1.default.parse(context, key)(keyName[keyName.length - 1], keyName[keyName.length - 1]);
+                // get value of data from object
+                var hadMiddlewares = (lodash_1.default.has(_this.middlewares, key) && !utils_1.default.isFalsy(context)) ? lodash_1.default.get(_this.middlewares, key) : false;
+                var subProcess = new Qreal();
+                var restructure = function (data) {
+                    if (!lodash_1.default.isObject(query) || lodash_1.default.isArray(query)) {
+                        if (utils_1.default.isString(query)) {
+                            var parse_1 = utils_1.default.parse(context, key);
+                            data = parse_1(query, data);
+                        }
+                        done(data, alias);
+                        return;
+                    }
+                    /*
+                      restructure query object,
+                      and wrap it to make this not make deep restructure again
+                    */
+                    if (hadMiddlewares) {
+                        subProcess.run(data, query).then(function (subObject) {
+                            subObject = (lodash_1.default.isArray(data)) ? lodash_1.default.toArray(subObject) : subObject[0];
+                            alias = utils_1.default.parse(data, key)(keyName[keyName.length - 1], keyName[keyName.length - 1]);
+                            // parse data then put it in value
+                            done(subObject, alias);
+                        });
+                    }
+                    else {
+                        // if data is not array of objects put it into array to not make deep restructure
+                        if (lodash_1.default.isArray(data) && !lodash_1.default.isObject(data[0])) {
+                            if (query.$value) {
+                                utils_1.default.warn("use shorthand of $value method in " + key + " query");
+                            }
+                            data = [data];
+                        }
+                        subProcess.run(data, query).then(function (subObject) {
+                            // if data is string join and wrap it into array to resume process
+                            if (lodash_1.default.isString(data)) {
+                                subObject = [subObject.join('')];
+                            }
+                            if (!lodash_1.default.isArray(context) && !lodash_1.default.isObject(context[0])) {
+                                subObject = subObject[0];
+                            }
+                            if (lodash_1.default.isArray(context) && !lodash_1.default.isObject(context[0])) {
+                                var array = lodash_1.default.toArray(subObject[0]);
+                                if (array.length !== 0) {
+                                    subObject = array;
+                                }
+                            }
+                            // parse data then put it in value
+                            done(subObject, alias);
+                        });
+                    }
+                };
+                // if query key had an middlewares run it
+                if (hadMiddlewares) {
+                    // query had sub middleware and don't had middlewares
+                    if (!hadMiddlewares.middlewares) {
+                        subProcess.middlewares = __assign({}, lodash_1.default.omit(hadMiddlewares, 'middlewares'));
+                        restructure(context);
+                        return;
+                    }
+                    var pass = _this.pass(key, context, __assign(__assign({}, value), methods.$include(value, key)), query);
+                    pass.then(function (context) {
+                        var _a;
+                        if (lodash_1.default.keys(hadMiddlewares).length !== 1 && !!hadMiddlewares) {
+                            subProcess.middlewares = __assign(__assign({}, lodash_1.default.omit(hadMiddlewares, 'middlewares')), (_a = {}, _a[key] = { middlewares: hadMiddlewares.middlewares }, _a));
+                        }
+                        restructure(context[0]);
+                    });
+                }
+                else {
+                    restructure(utils_1.default.castFunction(context)(query));
+                }
+            }, utils_1.default.isString(key) ? {} : []).then(function (value) {
+                var parse = utils_1.default.parse(value, key);
+                // set $value method by default value and key name of object
+                value = parse(methods.$value, (typeof methods.$value !== 'function' && lodash_1.default.trimStart(methods.$value, '@') !== '') ? methods.$value : value);
+                // push restructured item to result
+                push(value, key);
+            });
+        }, structure.$keyName ? {} : []);
+    };
+    return Qreal;
+}());
+exports.default = Qreal;
+module.exports = Qreal;
 
-      } else {
-        restructure( $castFunction(context)( query ) )
-      }
-
-    }, ( methods.$keyName !== '@' ) ? {}:[] ).then(( value ) => {
-      let parse = $parse( value, methods.$keyName )
-
-      // set $value method by default value and key name of object
-      value = parse(methods.$value, ( typeof methods.$value !== 'function' && _.trimStart(methods.$value, '@') !== '' ) ? methods.$value : value)
-
-      // push restructured item to result
-      push( value, methods.$keyName )
-
-    })
-  }, ( methods.$keyName !== '@' ) ? {}:[] )
-
-}
-
-// middlewares of data
-qreal.middlewares = {}
-
-// add a middleware to data
-qreal.use = function ( key, middleware ) {
-  // pass data to all middlewares of data as a waterflow
-
-  qreal.middlewares.pass = function (key, data, parentObject, query) {
-    return $async( qreal.middlewares[key].middlewares , ( middleware, index, done ) => {
-
-      $async( _.castArray( data ), ( item, index, done ) => {
-        middleware( item, parentObject, function ( value ) {
-          done( value )
-        }, query)
-      }).then((value) => {
-        if ( !_.isArray( data ) ) { value = value[0] }
-        data = value
-        done( value )
-      })
-
-    }).then(result => [ data ])
-  };
-
-  // if data had an space in middlwares push new middleware to it
-  if ( typeof qreal.middlewares[key] !== "undefined" ) {
-    if  ( qreal.middlewares[key].middlewares ) {
-      qreal.middlewares[key].middlewares.push(middleware)
-      return
+},{"./utils":3,"lodash":1}],3:[function(require,module,exports){
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
-  }
-  // create space in middleware for data
-  _.set(qreal.middlewares, `${key}.middlewares`, [ middleware ] )
-}
+};
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+var _ = require('lodash');
+var Utils = /** @class */ (function () {
+    function Utils() {
+        this.warn = function (msg) { console.log(new Error("Qreal [WARN] : " + msg)); };
+    }
+    Utils.prototype.isString = function (str) { return _.isString(str) && str !== ''; };
+    Utils.prototype.fillStart = function (arr, chr, length) {
+        if (chr === void 0) { chr = ' '; }
+        // make array fill with < chr >
+        var placeholder = _.fill(Array(length - arr.length), chr);
+        // merge array and placeholder to make length of it what user pass
+        return __spreadArrays(placeholder, arr);
+    };
+    Utils.prototype.isFalsy = function (data) {
+        if (!!data)
+            return false;
+        if (!_.isNumber(data))
+            return true;
+        return false;
+    };
+    Utils.prototype.castFunction = function (data) { return typeof data == 'function' ? data : function () { return data; }; };
+    Utils.prototype.merge = function (value, include, key) {
+        include = this.castFunction(include)(value || {}, key || 0);
+        // WARN : if include returned undefined data
+        if (!include) {
+            this.warn("$include return \"" + include + "\"");
+        }
+        if (_.isString(value)) {
+            if (_.isArray(include)) {
+                include = include.join('');
+            }
+            if (_.isEmpty(include)) {
+                include = '';
+            }
+            value = value + _.toString(include);
+        }
+        if (_.isObject(value)) {
+            value = _.merge(value, include);
+        }
+        return value;
+    };
+    Utils.prototype.parse = function (value, key) {
+        var _this = this;
+        return function (method, def) {
+            method = _this.castFunction(method)(value, key);
+            // if value of method is string , use method as a query to get value
+            method = (method[0] !== '@') ? def : _.get(value, _.trimStart(method, '@'), def);
+            return method;
+        };
+    };
+    Utils.prototype.ignore = function (object, items) {
+        // if [ object ] is array remove all items by value of it
+        if (_.isArray(object)) {
+            return _.pullAll(object, items);
+        }
+        // if [ object ] is object remove all items by keyNames of items
+        if (_.isObject(object)) {
+            return _.omit(object, items);
+        }
+        return object;
+    };
+    Utils.prototype.take = function (data, argument) {
+        // take only first two itmes in take argument
+        var take = _.take(_.castArray(argument), 2);
+        // placeholding [ take ]
+        var _a = this.fillStart(take, 0, 2), from = _a[0], to = _a[1];
+        // if [ form ] attribute object get index of it if not keep it
+        from = (_.findIndex(data, from) !== -1) ? _.findIndex(data, from) : from;
+        // convert [ to ] attribute to index syntax to make it work with slice
+        to = from + to + take.length - 1;
+        var slice = _.slice(data, from, to);
+        return slice;
+    };
+    Utils.prototype.async = function (
+    // any data has key and value
+    object, middleware, 
+    // pass any data has key and value
+    result) {
+        var _this = this;
+        if (result === void 0) { result = []; }
+        // return promise if we need to make it await
+        return new Promise(function (resolve) { return __awaiter(_this, void 0, void 0, function () {
+            var _loop_1, index, state_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _loop_1 = function (index) {
+                            var key, item, done, skip, _a, context, _b, keyName, _c, isSkiped;
+                            return __generator(this, function (_d) {
+                                switch (_d.label) {
+                                    case 0:
+                                        key = Object.keys(object)[index];
+                                        item = object[key];
+                                        done = function (next) { return function (item, index) {
+                                            // pass item and index what passed to done function to resolve promise
+                                            next([item, index]);
+                                        }; };
+                                        skip = function (next) { return function () {
+                                            next([true, true, true]);
+                                        }; };
+                                        return [4 /*yield*/, new Promise(function (next) { return middleware(item, key, done(next), skip(next)); })
+                                            // if context and keyName equal false break for loop
+                                        ];
+                                    case 1:
+                                        _a = _d.sent(), context = _a[0], _b = _a[1], keyName = _b === void 0 ? key : _b, _c = _a[2], isSkiped = _c === void 0 ? false : _c;
+                                        // if context and keyName equal false break for loop
+                                        if (isSkiped)
+                                            return [2 /*return*/, "continue"];
+                                        if (!context && !keyName) {
+                                            return [2 /*return*/, "break"];
+                                        }
+                                        // push context to result
+                                        result[keyName] = context;
+                                        return [2 /*return*/];
+                                }
+                            });
+                        };
+                        index = 0;
+                        _a.label = 1;
+                    case 1:
+                        if (!(index < Object.keys(object).length)) return [3 /*break*/, 4];
+                        return [5 /*yield**/, _loop_1(index)];
+                    case 2:
+                        state_1 = _a.sent();
+                        if (state_1 === "break")
+                            return [3 /*break*/, 4];
+                        _a.label = 3;
+                    case 3:
+                        index += 1;
+                        return [3 /*break*/, 1];
+                    case 4:
+                        // call callBack function
+                        resolve(result);
+                        return [2 /*return*/];
+                }
+            });
+        }); });
+    };
+    return Utils;
+}());
+exports.default = new Utils();
 
-global.qreal = qreal
-
-module.exports = qreal
-
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"asynkron":1,"lodash":2}]},{},[3]);
+},{"lodash":1}]},{},[2]);

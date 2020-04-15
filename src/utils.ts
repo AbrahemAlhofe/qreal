@@ -7,7 +7,7 @@ interface Iiterable {
 }
 
 class Utils {
-    warn = (msg: string): void => { throw new Error(`Qreal [WARN] : ${msg}`) }
+    warn = (msg: string): void => { console.log( new Error(`Qreal [WARN] : ${msg}`) ) }
 
     isString (str: string):boolean { return _.isString(str) && str !== '' }
 
@@ -88,22 +88,30 @@ class Utils {
     async (
         // any data has key and value
         object: { [key: string]: any },
-        middleware: ( item : any, key : string, done : (item: any, index? : string | number) => void ) => void,
+        middleware: ( item : any, key : string, done : (item: any, index? : string | number) => void, skip : () => void ) => void,
         // pass any data has key and value
         result: { [key: string]: any } = []): Promise<any> {
         // return promise if we need to make it await
         return new Promise(async (resolve) => {
-          for (let index in object ) {
+          for (let index = 0; index < Object.keys(object).length; index += 1) {
             // get item from object with index
-            let item = object[index]
-      
+            let key = Object.keys(object)[index]
+            let item = object[key]
+
+            const done = ( next: Function ) => function (item: any, index?: string | number): void {
+                // pass item and index what passed to done function to resolve promise
+                next([ item, index as string ])
+            }
+
+            const skip = ( next: Function ) => function () {
+                next([true, true, true])
+            }
+
             // await middleware and pass item and index and done function
-            const [context, keyName = index as string] = await new Promise(next => middleware(item, index, function (item, index) {
-              // pass item and index what passed to done function to resolve promise
-              next([ item, index as string ])
-            }))
+            const [context, keyName = key, isSkiped = false] = await new Promise(next => middleware(item, key, done(next), skip(next)))
       
             // if context and keyName equal false break for loop
+            if ( isSkiped ) continue
             if ( !context && !keyName ) { break }
       
             // push context to result

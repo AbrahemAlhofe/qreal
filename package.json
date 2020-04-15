@@ -1,6 +1,6 @@
 {
   "name": "qreal",
-  "version": "4.3.0",
+  "version": "5.0.0",
   "description": "a small package to restructure data",
   "main": "qreal.js",
   "scripts": {
@@ -22,7 +22,6 @@
   "private": false,
   "dependencies": {
     "@types/node": "^12.12.31",
-    "asynkron": "^1.0.0",
     "lodash": "^4.17.15"
   },
   "devDependencies": {

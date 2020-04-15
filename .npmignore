@@ -4,3 +4,7 @@ rollup.config.js
 lab
 webpack.config.js
 yarn.lock
+yarn-error.log
+tsconfig.json
+tslint.json
+src

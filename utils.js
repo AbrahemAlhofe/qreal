@@ -46,7 +46,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var _ = require('lodash');
 var Utils = /** @class */ (function () {
     function Utils() {
-        this.warn = function (msg) { throw new Error("Qreal [WARN] : " + msg); };
+        this.warn = function (msg) { console.log(new Error("Qreal [WARN] : " + msg)); };
     }
     Utils.prototype.isString = function (str) { return _.isString(str) && str !== ''; };
     Utils.prototype.fillStart = function (arr, chr, length) {
@@ -125,25 +125,32 @@ var Utils = /** @class */ (function () {
         if (result === void 0) { result = []; }
         // return promise if we need to make it await
         return new Promise(function (resolve) { return __awaiter(_this, void 0, void 0, function () {
-            var _loop_1, _a, _b, _i, index, state_1;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var _loop_1, index, state_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
                         _loop_1 = function (index) {
-                            var item, _a, context, _b, keyName;
-                            return __generator(this, function (_c) {
-                                switch (_c.label) {
+                            var key, item, done, skip, _a, context, _b, keyName, _c, isSkiped;
+                            return __generator(this, function (_d) {
+                                switch (_d.label) {
                                     case 0:
-                                        item = object[index];
-                                        return [4 /*yield*/, new Promise(function (next) { return middleware(item, index, function (item, index) {
-                                                // pass item and index what passed to done function to resolve promise
-                                                next([item, index]);
-                                            }); })
+                                        key = Object.keys(object)[index];
+                                        item = object[key];
+                                        done = function (next) { return function (item, index) {
+                                            // pass item and index what passed to done function to resolve promise
+                                            next([item, index]);
+                                        }; };
+                                        skip = function (next) { return function () {
+                                            next([true, true, true]);
+                                        }; };
+                                        return [4 /*yield*/, new Promise(function (next) { return middleware(item, key, done(next), skip(next)); })
                                             // if context and keyName equal false break for loop
                                         ];
                                     case 1:
-                                        _a = _c.sent(), context = _a[0], _b = _a[1], keyName = _b === void 0 ? index : _b;
+                                        _a = _d.sent(), context = _a[0], _b = _a[1], keyName = _b === void 0 ? key : _b, _c = _a[2], isSkiped = _c === void 0 ? false : _c;
                                         // if context and keyName equal false break for loop
+                                        if (isSkiped)
+                                            return [2 /*return*/, "continue"];
                                         if (!context && !keyName) {
                                             return [2 /*return*/, "break"];
                                         }
@@ -153,22 +160,18 @@ var Utils = /** @class */ (function () {
                                 }
                             });
                         };
-                        _a = [];
-                        for (_b in object)
-                            _a.push(_b);
-                        _i = 0;
-                        _c.label = 1;
+                        index = 0;
+                        _a.label = 1;
                     case 1:
-                        if (!(_i < _a.length)) return [3 /*break*/, 4];
-                        index = _a[_i];
+                        if (!(index < Object.keys(object).length)) return [3 /*break*/, 4];
                         return [5 /*yield**/, _loop_1(index)];
                     case 2:
-                        state_1 = _c.sent();
+                        state_1 = _a.sent();
                         if (state_1 === "break")
                             return [3 /*break*/, 4];
-                        _c.label = 3;
+                        _a.label = 3;
                     case 3:
-                        _i++;
+                        index += 1;
                         return [3 /*break*/, 1];
                     case 4:
                         // call callBack function

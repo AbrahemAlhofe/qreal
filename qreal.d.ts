@@ -6,14 +6,15 @@ export interface Query {
     $value: string | Function;
     $attrs?: string;
 }
-declare function qreal(data: Array<any>, structure: Query | {
-    [key: string]: Query;
-}): Promise<any[]>;
-declare namespace qreal {
-    var middlewares: {};
-    var pass: (key: string | number, data: any, parentObject: any, query: any) => Promise<any>;
-    var use: (key: string, middleware: (data: any, object: {
+declare class Qreal {
+    middlewares: {};
+    constructor();
+    pass(key: string | number, data: any, parentObject: any, query: any): Promise<any>;
+    use(key: string, middleware: (data: any, object: {
         [key: string]: any;
-    }, done: (item: any, index?: string | undefined) => void, query: Query) => void) => void;
+    }, done: (item: any, index?: string) => void, query: Query) => void): void;
+    run(data: Array<any>, structure: Query | {
+        [key: string]: Query;
+    }): Promise<any>;
 }
-export default qreal;
+export default Qreal;

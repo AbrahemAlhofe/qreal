@@ -10,7 +10,7 @@ declare class Utils {
     take(data: Iterable<string>, argument: number | (number | object)[]): any[] | string;
     async(object: {
         [key: string]: any;
-    }, middleware: (item: any, key: string, done: (item: any, index?: string | number) => void) => void, result?: {
+    }, middleware: (item: any, key: string, done: (item: any, index?: string | number) => void, skip: () => void) => void, result?: {
         [key: string]: any;
     }): Promise<any>;
 }

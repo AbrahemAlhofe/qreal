@@ -1,4 +1,5 @@
-const qreal = require('../qreal.js');
+const Qreal = require('../qreal.js');
+const qreal = new Qreal();
 const _ = require('lodash');
 
 // Utilities
@@ -53,7 +54,7 @@ test('pass empty array to qreal', () => {
 
   const expected = []
 
-  return qreal([], {
+  return qreal.run([], {
     title : "",
     description : ""
   }).then((result) => {
@@ -70,7 +71,7 @@ test('restructure data by select items', () => {
     description : BookSchema.description,
   }]
 
-   return qreal(BookSchema, {
+   return qreal.run(BookSchema, {
     title : "",
     description : ""
   }).then((result) => {
@@ -87,7 +88,7 @@ test('deep restructure data by select items', () => {
     publisher : { name : BookSchema.publisher.name }
   }]
 
-  return qreal(BookSchema, {
+  return qreal.run(BookSchema, {
     title : '',
     publisher : { name : '' }
   }).then(result => {
@@ -107,7 +108,7 @@ test('deep restructure data by select items ( array )', () => {
     ]
   }]
 
- return qreal(AuthorSchema, {
+ return qreal.run(AuthorSchema, {
     books : {
       name : ''
     }
@@ -125,7 +126,7 @@ test('take only the first three items', () => {
     id : BookSchema.id
   }, 3)
 
-  return qreal( create(BookSchema) , {
+  return qreal.run( create(BookSchema) , {
     $take : 3,
     title : "",
     id : ""
@@ -143,7 +144,7 @@ test('skip only the last three items', () => {
     id : BookSchema.id
   }, settings.length - 3 )
 
-  return qreal( create(BookSchema), {
+  return qreal.run( create(BookSchema), {
     $take : [ -3 ],
     title : "",
     id : ""
@@ -161,7 +162,7 @@ test('take an item in index 4 in addition to 3 items after it', () => {
     id : 4
   }, 4)
 
-  return qreal( create(BookSchema, 20), {
+  return qreal.run( create(BookSchema, 20), {
     $take : [ 4, 3 ],
     title : "",
     id : ""
@@ -179,7 +180,7 @@ test('take an item has { id : 4 } in addition to 3 items after it', () => {
     id : 4
   }, 4)
 
-  return qreal( create(BookSchema) , {
+  return qreal.run( create(BookSchema) , {
     $take : [ { id : 4 }, 3 ],
     title : "",
     id : ""
@@ -195,7 +196,7 @@ test('take first 10 characters in title of book', () => {
     title : BookSchema.title.slice(0, 10),
   }]
 
-  return qreal( BookSchema , {
+  return qreal.run( BookSchema , {
     title : {
       $take : 10
     }
@@ -213,7 +214,7 @@ test('ignore items by select key name of it', () => {
     id : BookSchema.id,
   }]
 
-  return qreal(BookSchema, {
+  return qreal.run(BookSchema, {
     $ignore : ['tags', 'description', 'author']
   }).then(result => {
     expect(result).toEqual( expected )
@@ -228,7 +229,7 @@ test('ignore items in an array by select it', () => {
     tags : ['test', 'book']
   }]
 
-  return qreal(BookSchema, {
+  return qreal.run(BookSchema, {
     tags : {
       $ignore : ['good']
     }
@@ -246,7 +247,7 @@ test('include data to items', () => {
     tags_length : BookSchema.tags.length
   }]
 
-  return qreal(BookSchema, {
+  return qreal.run(BookSchema, {
     $include : ( obj ) => ({ tags_length : obj.tags.length })
   }).then(result => {
     expect(result).toEqual( expected )
@@ -264,7 +265,7 @@ test('change key name of items by $keyName method', () => {
     }
   }
 
-  return qreal(BookSchema, {
+  return qreal.run(BookSchema, {
     $keyName : () => '@title',
     publisher : '',
     author : ''
@@ -284,7 +285,7 @@ test('change key name of items by $keyName method ( regular )', () => {
     }
   }
 
-  return qreal(BookSchema, {
+  return qreal.run(BookSchema, {
     $keyName : 'book',
     publisher : '',
     author : ''
@@ -304,7 +305,7 @@ test('change key name of sub items by alias ( normal )', () => {
     }
   ]
 
-  return qreal(BookSchema, {
+  return qreal.run(BookSchema, {
     "publisher : my Publisher" : '',
     author : ''
   }).then(result => {
@@ -323,7 +324,7 @@ test('change key name of sub items by alias ( from item )', () => {
     }
   ]
 
-  return qreal(BookSchema, {
+  return qreal.run(BookSchema, {
     "publisher : @name" : '',
     author : ''
   }).then(result => {
@@ -353,7 +354,7 @@ test('change key name of sub items by alias ( from item ) with two middlewares',
     }
   ]
 
-  return qreal(BookSchema, {
+  return qreal.run(BookSchema, {
     "author : @name" : {
       age : ''
     }
@@ -370,7 +371,7 @@ test('change value of items by Function', () => {
     nameBook : BookSchema.title
   }]
 
-  return qreal(BookSchema, {
+  return qreal.run(BookSchema, {
     $value : (obj) => ({ nameBook : obj.title }),
   }).then(result => {
     expect(result).toEqual( expected )
@@ -383,7 +384,7 @@ test('change value of items by String', () => {
 
   const expected = [ BookSchema.title ]
 
-  return qreal(BookSchema, {
+  return qreal.run(BookSchema, {
     $value : '@title'
   }).then(result => {
     expect(result).toEqual( expected )
@@ -396,7 +397,7 @@ test('change value of items by String ( regular )', () => {
 
   const expected = [ 'value' ]
 
-  return qreal(BookSchema, {
+  return qreal.run(BookSchema, {
     $value : 'value'
   }).then(result => {
     expect(result).toEqual( expected )
@@ -409,7 +410,7 @@ test('change value of items by String ( Number )', () => {
 
   const expected = [ AuthorSchema.age ]
 
-  return qreal(AuthorSchema, {
+  return qreal.run(AuthorSchema, {
     $value : '@age'
   }).then(result => {
     expect(result).toEqual( expected )
@@ -426,7 +427,7 @@ test('change value of [ books ] of Author by String ( shorthand )', () => {
     notifications : AuthorSchema.notifications.length
   }]
 
-  return qreal(AuthorSchema, {
+  return qreal.run(AuthorSchema, {
     books : '@length',
     notifications : '@length'
   }).then(result => {
@@ -453,7 +454,7 @@ test('get name and age of author of each book', () => {
     }
   }]
 
-  return qreal(BookSchema, {
+  return qreal.run(BookSchema, {
     author : {
       name : '',
       age : ''
@@ -483,7 +484,7 @@ test('get name of author in addition to title and id of each book he had', () =>
 
   }]
 
-  return qreal(AuthorSchema, {
+  return qreal.run(AuthorSchema, {
     name : '',
     books : {
       title : '',
@@ -515,7 +516,7 @@ test('get name and age of author of each book he had with ( Promise ) two items'
     }, 500)
   })
 
-  return qreal( create(BookSchema, 2), {
+  return qreal.run( create(BookSchema, 2), {
     author : {
       name : '',
       age : ''
@@ -553,7 +554,7 @@ test('get name and id of books in publisher in BookSchema ( sub middleware )', (
     }
   })
 
-  return qreal(BookSchema, {
+  return qreal.run(BookSchema, {
     publisher : {
       books : {
         title : '',
@@ -577,7 +578,7 @@ test('support data as a function', () => {
     BookWithCustomeId : Object.assign(BookSchema, { id : 12 })
   }]
 
-  return qreal({ BookWithCustomeId }, {
+  return qreal.run({ BookWithCustomeId }, {
     BookWithCustomeId : 12
   }).then(result => {
     expect(result).toEqual(expected)
@@ -594,7 +595,7 @@ test('support data as a function ( array )', () => {
     BookWithCustomeTags : Object.assign(BookSchema, { tags : ['tag1', 'tag2', 'tag3'] })
   }]
 
-  return qreal({ BookWithCustomeTags }, {
+  return qreal.run({ BookWithCustomeTags }, {
     BookWithCustomeTags : ['tag1', 'tag2', 'tag3']
   }).then(result => {
     expect(result).toEqual(expected)
@@ -615,7 +616,7 @@ test('support data as a function with middleware', () => {
     done( func(['tag11', 'tag21', 'tag31']) )
   })
 
-  return qreal({ BookWithCustomeTags }, {
+  return qreal.run({ BookWithCustomeTags }, {
     BookWithCustomeTags : ['tag1', 'tag2', 'tag3']
   }).then(result => {
     expect(result).toEqual(expected)
@@ -634,7 +635,7 @@ test('pass query to middlewares', () => {
 
   const expected = [ { title : BookSchema.title.toUpperCase() } ]
 
-  return qreal(BookSchema, {
+  return qreal.run(BookSchema, {
     title : 'UpperCase'
   }).then(result => {
     expect(result).toEqual(expected)

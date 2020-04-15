@@ -29,7 +29,8 @@ restructure data by write the name of the property.
 > Info : qreal return promise
 
 ```javascript
-const qreal = require('qreal')
+const Qreal = require('qreal')
+const qreal = new Qreal()
 var data = [
    {
        name : 'jack',
@@ -57,7 +58,7 @@ var data = [
    }
 ]
 
-qreal(data, {
+qreal.run(data, {
  name : '',
  // OR pass data to name as function
  name : 'UpperCase',
@@ -93,7 +94,7 @@ TYPE :  $Number$  or  $Array$
 $take provide you to specify count of items what do you want to take
 
 ```javascript
-qreal(data, {
+qreal.run(data, {
  $take: 1,
  name : ''
 })
@@ -136,7 +137,7 @@ TYPE : $Array$
 You can select items you don't want
 
 ```javascript
-qreal(data, {
+qreal.run(data, {
  $ignore : [ 'address', 'age' ]
 })
 
@@ -160,7 +161,7 @@ TYPE : $Function$
 You can include items if you want 😜.
 
 ```javascript
-qreal(data, {
+qreal.run(data, {
      $include : (obj, key) => ({ adult : obj.age > 18 }),
      name : ''
 })
@@ -191,7 +192,7 @@ $keyName provide you to change key name of object 😎.
 > name must 🤬 start with '@' if you select name from object
 
 ```javascript
-qreal(OBJECTS, {
+qreal.run(OBJECTS, {
      age : '',
      $keyName : '@name',
      // OR
@@ -218,7 +219,7 @@ $keyName is not working with sub items 😥 but you can use aliases 😃
 > name must 🤬 start with '@' if you select name from object
 
 ```javascript
-qreal(OBJECTS, {
+qreal.run(OBJECTS, {
      "address : newAddress" : {
        first : ''
      },
@@ -261,7 +262,7 @@ You can set value of object 😎.
 > name must 🤬 start with '@' if you select value from object
 
 ```javascript
-qreal(OBJECTS, {
+qreal.run(OBJECTS, {
  $value: '@age'
 })
 
@@ -270,7 +271,7 @@ qreal(OBJECTS, {
 ```
 
 ```javascript
-qreal(OBJECT, {
+qreal.run(OBJECT, {
   // WARN : use shorthand of $value method on sub queries
   address : '@first'
 })
@@ -315,7 +316,7 @@ qreal.use('author', ( id, object, done ) => {
   )
 })
 
-qreal(books, {
+qreal.run(books, {
    title : '',
    author : {
       $ignore : ['id']
@@ -367,7 +368,7 @@ qreal.use('author.books', ( id, object, done ) => {
     })
 })
 
-qreal(books, {
+qreal.run(books, {
  author : {
      books : {
          title: ''
@@ -417,7 +418,7 @@ qreal.use('title', (title, object, done, query) => {
   }
 })
 
-qreal(Book, {
+qreal.run(Book, {
   title : 'UpperCase'
 })
 
